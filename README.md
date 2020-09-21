@@ -19,7 +19,7 @@ backup this data.
 
 To start all services:
 
-    docker-compose up
+    docker-compose up -d
   
 Optionally download exercise images (might take a while):
 
