@@ -22,7 +22,7 @@ To start all services:
     docker-compose up
 
 Then open <http://localhost> (or your server IP) and log in as: **admin**,
-password **admin**
+password **adminadmin**
 
 
 ### 2 - Lifecycle Management
