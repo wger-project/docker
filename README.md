@@ -21,9 +21,10 @@ To start all services:
 
     docker-compose up
   
-Optionally download exercise images (might take a while):
+Optionally download exercise images and the ingredients (will take some time):
 
     docker-compose exec web python3 manage.py download-exercise-images
+    docker-compose exec web wger load-online-fixtures
     
 
 Then open <http://localhost> (or your server's IP) and log in as: **admin**,
