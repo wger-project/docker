@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   web:
-    image: wger/devel:2.0-dev
+    image: wger/devel:latest
     volumes:
       - static:/home/wger/static
       - media:/home/wger/media
