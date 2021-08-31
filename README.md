@@ -21,8 +21,10 @@ To start all services:
 
     docker-compose up -d
   
-Optionally download exercise images and the ingredients (will take some time):
+Optionally download current exercises from wger.de, exercise images and
+the ingredients (will take some time):
 
+    docker-compose exec web python3 manage.py sync-exercises
     docker-compose exec web python3 manage.py download-exercise-images
     docker-compose exec web wger load-online-fixtures
     
