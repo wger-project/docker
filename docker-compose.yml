@@ -71,20 +71,5 @@ services:
 
 volumes:
   postgres-data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./data/postgres
-      o: bind
   static:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./data/static
-      o: bind
   media:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./data/media
-      o: bind
