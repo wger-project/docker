@@ -10,8 +10,8 @@ services:
     env_file:
       - ./config/prod.env
     volumes:
-      - ./data/static:/home/wger/static
-      - ./data/media:/home/wger/media
+      - static:/home/wger/static
+      - media:/home/wger/media
     ports:
       - 8000
     healthcheck:
@@ -21,13 +21,15 @@ services:
       retries: 5
     restart: unless-stopped
 
+  nginx:
+    image: nginx:stable
     container_name: wger_nginx
     depends_on:
       - web
     volumes:
       - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./data/static:/wger/static:ro
-      - ./data/media:/wger/media:ro
+      - static:/wger/static:ro
+      - media:/wger/media:ro
     ports:
       - 80:80
     healthcheck:
@@ -45,7 +47,7 @@ services:
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data/
+      - postgres-data:/var/lib/postgresql/data/
     expose:
       - 5432
     healthcheck:
@@ -66,3 +68,23 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+volumes:
+  postgres-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/postgres
+      o: bind
+  static:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/static
+      o: bind
+  media:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./data/media
+      o: bind
