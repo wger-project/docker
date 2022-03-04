@@ -3,45 +3,66 @@ version: '3.7'
 services:
   web:
     image: wger/server:latest
-    volumes:
-      - static:/home/wger/static
-      - media:/home/wger/media
-    ports:
-      - 8000
-    env_file:
-      - ./prod.env
+    container_name: wger_server
     depends_on:
       - db
       - cache
-
-  nginx:
-    build: ./nginx
+    env_file:
+      - ./config/prod.env
     volumes:
-      - static:/wger/static:ro
-      - media:/wger/media:ro
+      - ./data/static:/home/wger/static
+      - ./data/media:/home/wger/media
     ports:
-      - 80:80
+      - 8000
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:80
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+    container_name: wger_nginx
     depends_on:
       - web
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./data/static:/wger/static:ro
+      - ./data/media:/wger/media:ro
+    ports:
+      - 80:80
+    healthcheck:
+      test: service nginx status
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   db:
     image: postgres:12-alpine
-    volumes:
-      - postgres-data:/var/lib/postgresql/data/
-    expose:
-      - 5432
+    container_name: wger_db
     environment:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   cache:
-    restart: always
-    image: redis:latest
+    image: redis
+    container_name: wger_cache
     expose:
       - 6379
-
-volumes:
-  postgres-data:
-  static:
-  media:
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
