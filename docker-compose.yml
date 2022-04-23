@@ -12,6 +12,10 @@ services:
     volumes:
       - static:/home/wger/static
       - media:/home/wger/media
+      # For development, mount your local git checkout
+      # - type: bind
+      #  source: /path/lo/wger/sourcecode
+      #  target: /home/wger/src/
     ports:
       - "8000"
     healthcheck:
