@@ -41,12 +41,6 @@ Just remove the containers and pull the newest version:
     docker-compose pull
     docker-compose up
 
-If there are database any changes (you will see a warning from django on
-the logs), you need to start the migration process yourself as you might
-want to make a backup first:
-
-    docker-compose exec web python3 manage.py migrate
-
 ### 3 - Lifecycle Management
 
 To stop all services issue a stop command, this will preserve all containers
