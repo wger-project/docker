@@ -5,8 +5,10 @@ services:
     image: wger/server:latest
     container_name: wger_server
     depends_on:
-      - db
-      - cache
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
     env_file:
       - ./config/prod.env
     volumes:
