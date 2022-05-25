@@ -79,3 +79,7 @@ volumes:
   postgres-data:
   static:
   media:
+
+networks:
+  default:
+    name: wger_network
