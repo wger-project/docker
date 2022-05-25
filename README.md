@@ -15,6 +15,10 @@ the data is persisted. The only thing you need to do is update the docker
 images. Consult the docker volume command for details on how to access or
 backup this data.
 
+It is recommended to regularly pull the latest version of the images from this
+repository, since sometimes new configurations or environmental variables are
+added.
+
 ### 1 - Start
 
 To start all services:
@@ -27,6 +31,9 @@ the ingredients (will take some time):
     docker-compose exec web python3 manage.py sync-exercises
     docker-compose exec web python3 manage.py download-exercise-images
     docker-compose exec web wger load-online-fixtures
+
+(these steps can be configured to run automatically on startup, see the options
+in `prod.env`.)
     
 
 Then open <http://localhost> (or your server's IP) and log in as: **admin**,
@@ -68,10 +75,37 @@ e.g.
      docker-compose exec --user root web /bin/bash
 
 
+## Deployment
+
+The easiest way to deploy this application is to use a reverse proxy like nginx
+or traefik. You can change the port this application exposes and reverse proxy
+your domain to it. For this edit the "nginx" service in docker-compose.yml and
+set the port to some value, e.g. `"8080:80"` then configure your proxy to forward
+requests to it, e.g. for nginx:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+
+    location / {
+        proxy_pass http://localhost:8080;
+    }
+
+    # Increase max body size to allow for video uploads
+    client_max_body_size 100M;
+}
+```
+
+Any other settings such as HTTPS can be configured here as well. Also notice
+that the application currently needs to run on its own (sub)domain and not in a
+subdirectory, so `location /wger {` will not work. 
+
+
 ## Building
 
 If you want to build the images yourself, clone the wger repository and follow
-the instructions for the devel image in the extras/docker folder.
+the instructions for the devel image in the `extras/docker` folder.
 
 
 ## Contact
