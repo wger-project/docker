@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
   web:
     image: wger/server:latest
@@ -74,6 +72,47 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  celery_worker:
+    image: wger/server:latest
+    container_name: wger_celery_worker
+    command: /start-worker
+    env_file:
+      - ./config/prod.env
+    depends_on:
+      cache:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: celery -A wger inspect ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery_beat:
+    image: wger/server:latest
+    container_name: wger_celery_beat
+    command: /start-beat
+    env_file:
+      - ./config/prod.env
+    depends_on:
+      cache:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  celery_flower:
+    image: wger/server:latest
+    container_name: wger_celery_flower
+    command: /start-flower
+    env_file:
+      - ./config/prod.env
+    ports:
+      - "5557:5555"
+    depends_on:
+      celery_worker:
+        condition: service_healthy
 
 volumes:
   postgres-data:
