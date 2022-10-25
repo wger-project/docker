@@ -99,8 +99,6 @@ services:
     depends_on:
       cache:
         condition: service_healthy
-      db:
-        condition: service_healthy
 
   celery_flower:
     image: wger/server:latest
