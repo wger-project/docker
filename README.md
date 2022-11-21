@@ -30,6 +30,7 @@ the ingredients (will take some time):
 
     docker-compose exec web python3 manage.py sync-exercises
     docker-compose exec web python3 manage.py download-exercise-images
+    docker-compose exec web python3 manage.py download-ingredient-images
     docker-compose exec web wger load-online-fixtures
 
 (these steps can be configured to run automatically on startup, see the options
