@@ -1,4 +1,8 @@
-version: '3.7'
+#
+# Please consult the `Deployment` section in the readme if you want to deploy
+# this. You need to keep this nginx service, even if you have your own, otherwise
+# the static files will not be served correctly!
+#
 
 services:
   web:

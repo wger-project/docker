@@ -79,9 +79,10 @@ e.g.
 
 The easiest way to deploy this application is to use a reverse proxy like nginx
 or traefik. You can change the port this application exposes and reverse proxy
-your domain to it. For this edit the "nginx" service in docker-compose.yml and
+your domain to it. For this just edit the "nginx" service in docker-compose.yml and
 set the port to some value, e.g. `"8080:80"` then configure your proxy to forward
-requests to it, e.g. for nginx:
+requests to it, e.g. for nginx (no other ports need to be changed, those are used
+only within the application's docker network):
 
 ```nginx
 server {
