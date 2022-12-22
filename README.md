@@ -81,27 +81,58 @@ The easiest way to deploy this application is to use a reverse proxy like nginx
 or traefik. You can change the port this application exposes and reverse proxy
 your domain to it. For this just edit the "nginx" service in docker-compose.yml and
 set the port to some value, e.g. `"8080:80"` then configure your proxy to forward
-requests to it, e.g. for nginx (no other ports need to be changed, those are used
+requests to it, e.g. for nginx (no other ports need to be changed, they are used
 only within the application's docker network):
 
+Also notice that the application currently needs to run on its own (sub)domain
+and not in a subdirectory, so `location /wger {` will probably only mostly work. 
+
+
 ```nginx
+upstream wger {
+    server 123.456.789.0:8080;
+}
+
 server {
     listen 80;
-    listen [::]:80;
+    listen [::]:443 ssl;
+    listen 443 ssl;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://wger;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
     }
 
-    # Increase max body size to allow for video uploads
-    client_max_body_size 100M;
+    server_name my.domain.example.com;
+
+    ssl_certificate /path/to/https/certificate.crt;
+    ssl_certificate_key /path/to/https/certificate.key;
 }
 ```
 
-Any other settings such as HTTPS can be configured here as well. Also notice
-that the application currently needs to run on its own (sub)domain and not in a
-subdirectory, so `location /wger {` will not work. 
+### Read this if you use HTTPS
 
+If you want to use HTTPS like in the example config you need to add some
+additional configurations. Since the HTTPS connections are reversed proxied,
+the secure connection terminates there, the application will receive a regular
+HTTP request and django's [CSRF protection](https://docs.djangoproject.com/en/4.1/ref/csrf/)
+will kick in.
+
+To solve this, update the env file and either
+
+* manually set a list of your domain names and/or server IPs 
+  `CSRF_TRUSTED_ORIGINS=https://my.domain.example.com,https://118.999.881.119`
+* or set the `X-Forwarded-Proto` header like in the example and set
+  `X_FORWARDED_PROTO_HEADER_SET=True`. If you do this consult the
+  [documentation](https://docs.djangoproject.com/en/4.1/ref/settings/#secure-proxy-ssl-header)
+  as there are some security considerations.
+
+You might want to set `DJANGO_DEBUG` to true while you are debugging this is you
+encounter errors.
 
 ## Building
 
