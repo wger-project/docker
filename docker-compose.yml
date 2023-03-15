@@ -101,6 +101,8 @@ services:
     image: wger/server:latest
     container_name: wger_celery_beat
     command: /start-beat
+    volumes:
+      - celery-beat:/home/wger/beat/
     env_file:
       - ./config/prod.env
     depends_on:
@@ -121,6 +123,7 @@ services:
 
 volumes:
   postgres-data:
+  celery-beat:
   static:
   media:
 
