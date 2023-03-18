@@ -19,6 +19,34 @@ It is recommended to regularly pull the latest version of the images from this
 repository, since sometimes new configurations or environmental variables are
 added.
 
+### Configuration
+
+Instead of editing the compose file or the env file directly, it is recommended
+to extend it. That way you can more easily pull changes from this repository.
+
+For example, you might not want to run the application on port 80 because some
+other service in your network is already using it. For this, simply create a new
+file called `docker-compose.override.yml` with the following content:
+
+    services:
+      nginx:
+        ports:
+          - "8080:80"
+
+Now the port setting will be overwritten from the configured nginx service when
+you do a `docker compose up`. The same applies to the env variables, just create
+a new file called e.g. `my.env` and add it after the provided `prod.env` for the
+web service (again, this is `docker-compose.override.yml`). There you add the
+settings that you changed, and only those, which makes it easier to troubleshoot,
+etc.:
+
+    web:
+      env_file:
+        - ./config/prod.env
+        - ./config/my.env
+
+For more information and possibilities consult <https://docs.docker.com/compose/extends/>
+
 ### 1 - Start
 
 To start all services:
