@@ -20,7 +20,7 @@ services:
       - static:/home/wger/static
       - media:/home/wger/media
     expose:
-      - "8000"
+      - 8000
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000
       interval: 10s
@@ -112,7 +112,7 @@ services:
     env_file:
       - ./config/prod.env
     ports:
-      - "5557:5555"
+      - "5555:5555"
     depends_on:
       celery_worker:
         condition: service_healthy
