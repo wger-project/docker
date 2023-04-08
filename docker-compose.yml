@@ -105,18 +105,6 @@ services:
       cache:
         condition: service_healthy
 
-  celery_flower:
-    image: wger/server:latest
-    container_name: wger_celery_flower
-    command: /start-flower
-    env_file:
-      - ./config/prod.env
-    ports:
-      - "5555:5555"
-    depends_on:
-      celery_worker:
-        condition: service_healthy
-
 volumes:
   postgres-data:
   celery-beat:

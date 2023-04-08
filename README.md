@@ -45,6 +45,20 @@ etc.:
         - ./config/prod.env
         - ./config/my.env
 
+To add a web interface for the celery queue, add a new service to the override file:
+
+    celery_flower:
+      image: wger/server:latest
+      container_name: wger_celery_flower
+      command: /start-flower
+      env_file:
+        - ./config/prod.env
+      ports:
+        - "5555:5555"
+      depends_on:
+        celery_worker:
+          condition: service_healthy
+
 For more information and possibilities consult <https://docs.docker.com/compose/extends/>
 
 ### 1 - Start
