@@ -45,6 +45,20 @@ etc.:
         - ./config/prod.env
         - ./config/my.env
 
+To add a web interface for the celery queue, add a new service to the override file:
+
+    celery_flower:
+      image: wger/server:latest
+      container_name: wger_celery_flower
+      command: /start-flower
+      env_file:
+        - ./config/prod.env
+      ports:
+        - "5555:5555"
+      depends_on:
+        celery_worker:
+          condition: service_healthy
+
 For more information and possibilities consult <https://docs.docker.com/compose/extends/>
 
 ### 1 - Start
@@ -58,6 +72,7 @@ the ingredients (will take some time):
 
     docker-compose exec web python3 manage.py sync-exercises
     docker-compose exec web python3 manage.py download-exercise-images
+    docker-compose exec web python3 manage.py download-exercise-videos
     docker-compose exec web wger load-online-fixtures
 
 (these steps can be configured to run automatically on startup, see the options

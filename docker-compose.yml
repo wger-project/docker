@@ -19,12 +19,8 @@ services:
     volumes:
       - static:/home/wger/static
       - media:/home/wger/media
-      # For development, mount your local git checkout
-      # - type: bind
-      #  source: /path/to/wger/sourcecode
-      #  target: /home/wger/src/
-    ports:
-      - "8000"
+    expose:
+      - 8000
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000
       interval: 10s
@@ -80,8 +76,38 @@ services:
       retries: 5
     restart: unless-stopped
 
+  celery_worker:
+    image: wger/server:latest
+    container_name: wger_celery_worker
+    command: /start-worker
+    env_file:
+      - ./config/prod.env
+    depends_on:
+      cache:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: celery -A wger inspect ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  celery_beat:
+    image: wger/server:latest
+    container_name: wger_celery_beat
+    command: /start-beat
+    volumes:
+      - celery-beat:/home/wger/beat/
+    env_file:
+      - ./config/prod.env
+    depends_on:
+      cache:
+        condition: service_healthy
+
 volumes:
   postgres-data:
+  celery-beat:
   static:
   media:
 
