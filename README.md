@@ -177,6 +177,38 @@ To solve this, update the env file and either
 You might want to set `DJANGO_DEBUG` to true while you are debugging this is you
 encounter errors.
 
+
+### Automatically start service
+
+If everything works correctly, you will want to start the compose file as a
+service so that it auto restarts when you reboot the server. If you use systemd,
+this can be done with a simple. Create the file `/etc/systemd/system/wger.service`
+and enter the following content (check where the absolute path of the docker
+command is with `which docker`)
+
+```
+[Unit]
+Description=wger docker compose service
+PartOf=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/path/to/the/docker/compose/
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose down
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Read the file with `systemctl daemon-reload` and start it with
+`systemctl start wger`. If there are no errors and `systemctl status wger`
+shows that the service is active (this might take some time), everything went
+well. With `systemctl enable wger` the service will be automatically restarted
+after a reboot.
+
 ## Building
 
 If you want to build the images yourself, clone the wger repository and follow
