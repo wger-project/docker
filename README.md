@@ -1,11 +1,11 @@
 <img src="https://raw.githubusercontent.com/wger-project/wger/master/wger/core/static/images/logos/logo.png" width="100" height="100" alt="wger logo" />
 
 
-# Production...ish docker-compose image for wger
+# Production...ish docker compose image for wger
 
 ## Usage
 
-This docker-compose file starts up a production environment with gunicorn
+This docker compose file starts up a production environment with gunicorn
 as the webserver, postgres as a database and redis for caching with nginx
 used as a reverse proxy. If you want to develop, take a look at the docker
 compose file in the application repository.
@@ -65,15 +65,15 @@ For more information and possibilities consult <https://docs.docker.com/compose/
 
 To start all services:
 
-    docker-compose up -d
+    docker compose up -d
   
 Optionally download current exercises from wger.de, exercise images and
 the ingredients (will take some time):
 
-    docker-compose exec web python3 manage.py sync-exercises
-    docker-compose exec web python3 manage.py download-exercise-images
-    docker-compose exec web python3 manage.py download-exercise-videos
-    docker-compose exec web wger load-online-fixtures
+    docker compose exec web python3 manage.py sync-exercises
+    docker compose exec web python3 manage.py download-exercise-images
+    docker compose exec web python3 manage.py download-exercise-videos
+    docker compose exec web wger load-online-fixtures
 
 (these steps can be configured to run automatically on startup, see the options
 in `prod.env`.)
@@ -87,35 +87,35 @@ password **adminadmin**
 
 Just remove the containers and pull the newest version:
 
-    docker-compose down
-    docker-compose pull
-    docker-compose up
+    docker compose down
+    docker compose pull
+    docker compose up
 
 ### 3 - Lifecycle Management
 
 To stop all services issue a stop command, this will preserve all containers
 and volumes:
 
-    docker-compose stop
+    docker compose stop
 
 To start everything up again:
 
-    docker-compose start
+    docker compose start
 
 To remove all containers (except for the volumes)
 
-    docker-compose down
+    docker compose down
 
 To view the logs:
 
-    docker-compose logs -f
+    docker compose logs -f
 
 
 You might need to issue other commands or do other manual work in the container,
 e.g.
 
-     docker-compose exec web yarn install
-     docker-compose exec --user root web /bin/bash
+     docker compose exec web yarn install
+     docker compose exec --user root web /bin/bash
 
 
 ## Deployment
