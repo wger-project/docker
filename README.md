@@ -211,6 +211,36 @@ shows that the service is active (this might take some time), everything went
 well. With `systemctl enable wger` the service will be automatically restarted
 after a reboot.
 
+### Backup
+
+**Database volume:** The most important thing to backup. For this just make
+a dump and restore it when needed
+
+```
+# Stop all other containers so the db is not changed while you export it
+docker compose stop web nginx cache celery_worker celery_beat
+docker compose exec db pg_dumpall --clean --username wger > backup.sql
+docker compose start
+
+# When you need to restore it
+docker compose stop
+docker volume remove docker_postgres-data
+docker compose up db
+cat backup.sql | docker compose exec -T db psql --username wger --dbname wger
+docker compose up
+```
+
+**Media volume:** If you haven't uploaded any own images (exercises, gallery),
+you don't need to backup this, the contents can just be downloaded again. If
+you have, please consult these possibilities:
+
+* <https://www.docker.com/blog/back-up-and-share-docker-volumes-with-this-extension/>
+* <https://github.com/BretFisher/docker-vackup>
+
+
+**Static volume:** The contents of this volume are 100% generated and recreated
+on startup, no need to backup anything
+
 ### Postgres Upgrade
 
 It is sadly not possible to automatically upgrade between postgres versions,
