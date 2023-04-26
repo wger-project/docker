@@ -110,13 +110,12 @@ To view the logs:
 
     docker compose logs -f
 
-
 You might need to issue other commands or do other manual work in the container,
 e.g.
 
      docker compose exec web yarn install
      docker compose exec --user root web /bin/bash
-
+     docker compose exec --user postgres db psql wger -U wger
 
 ## Deployment
 
@@ -157,7 +156,7 @@ server {
 }
 ```
 
-### Read this if you use HTTPS
+### If you get CSRF errors
 
 If you want to use HTTPS like in the example config you need to add some
 additional configurations. Since the HTTPS connections are reversed proxied,
@@ -169,6 +168,9 @@ To solve this, update the env file and either
 
 * manually set a list of your domain names and/or server IPs 
   `CSRF_TRUSTED_ORIGINS=https://my.domain.example.com,https://118.999.881.119`
+  If you are unsure what origin to add here, set the debug setting to true, restart
+  and try again, the error message that appears will have the origin prominently
+  displayed.
 * or set the `X-Forwarded-Proto` header like in the example and set
   `X_FORWARDED_PROTO_HEADER_SET=True`. If you do this consult the
   [documentation](https://docs.djangoproject.com/en/4.1/ref/settings/#secure-proxy-ssl-header)
@@ -208,6 +210,41 @@ Read the file with `systemctl daemon-reload` and start it with
 shows that the service is active (this might take some time), everything went
 well. With `systemctl enable wger` the service will be automatically restarted
 after a reboot.
+
+### Postgres Upgrade
+
+It is sadly not possible to automatically upgrade between postgres versions,
+you need to perform the upgrade manually. Since the amount of data the app
+generates is small a simple dump and restore is the simplest way to do this.
+
+If you pulled new changes from this repo and got the error message "The data
+directory was initialized by PostgreSQL version 12, which is not compatible
+with this version 15." this is for you.
+
+See also <https://github.com/docker-library/postgres/issues/37>
+
+
+```bash
+# Checkout the last version of the composer file that uses postgres 12 
+git checkout pg-12
+
+# Stop all other containers
+docker compose stop web nginx cache celery_worker celery_beat
+
+# Make a dump of the database and remove the container and volume
+docker compose exec db pg_dumpall --clean --username wger > backup.sql
+docker compose stop db
+docker compose down
+docker volume remove docker_postgres-data
+
+# Checkout current version, import the dump and start everything
+git checkout master
+docker compose up db
+cat backup.sql | docker compose exec -T db psql --username wger --dbname wger
+docker compose exec -T db psql --username wger --dbname wger -c "ALTER USER wger WITH PASSWORD 'wger'"
+docker compose up
+rm backup.sql
+```
 
 ## Building
 
