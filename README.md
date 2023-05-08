@@ -34,11 +34,15 @@ file called `docker-compose.override.yml` with the following content:
           - "8080:80"
 
 Now the port setting will be overwritten from the configured nginx service when
-you do a `docker compose up`. The same applies to the env variables, just create
-a new file called e.g. `my.env` and add it after the provided `prod.env` for the
-web service (again, this is `docker-compose.override.yml`). There you add the
-settings that you changed, and only those, which makes it easier to troubleshoot,
-etc.:
+you do a `docker compose up`. However, note that compose will concatenate both sets
+of values so in this case the application will be binded to 8080 (from the override)
+*and* 80 (from the regular compose file). It seems that at the moment the only
+workaround is remove the ports settings altogether from the compose file.
+
+The same applies to the env variables, just create a new file called e.g. `my.env`
+and add it after the provided `prod.env` for the web service (again, this is
+`docker-compose.override.yml`). There you add the settings that you changed, and only
+those, which makes it easier to troubleshoot, etc.:
 
     web:
       env_file:
