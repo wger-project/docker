@@ -59,6 +59,11 @@ To add a web interface for the celery queue, add a new service to the override f
         - ./config/prod.env
       ports:
         - "5555:5555"
+      healthcheck:
+        test: wget --no-verbose --tries=1 http://localhost:5555/healthcheck
+        interval: 10s
+        timeout: 5s
+        retries: 5
       depends_on:
         celery_worker:
           condition: service_healthy
