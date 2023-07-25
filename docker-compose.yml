@@ -82,6 +82,8 @@ services:
     command: /start-worker
     env_file:
       - ./config/prod.env
+    volumes:
+      - media:/home/wger/media
     depends_on:
       web:
         condition: service_healthy

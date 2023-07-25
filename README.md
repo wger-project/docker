@@ -188,7 +188,7 @@ encounter errors.
 
 If everything works correctly, you will want to start the compose file as a
 service so that it auto restarts when you reboot the server. If you use systemd,
-this can be done with a simple. Create the file `/etc/systemd/system/wger.service`
+this can be done with a simple file. Create the file `/etc/systemd/system/wger.service`
 and enter the following content (check where the absolute path of the docker
 command is with `which docker`)
 
