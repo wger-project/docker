@@ -69,6 +69,8 @@ services:
     container_name: wger_cache
     expose:
       - 6379
+    volumes:
+      - redis-data:/data
     healthcheck:
       test: redis-cli ping
       interval: 10s
@@ -110,6 +112,7 @@ volumes:
   celery-beat:
   static:
   media:
+  redis-data:
 
 networks:
   default:
