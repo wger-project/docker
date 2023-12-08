@@ -1,15 +1,13 @@
-version: '3.8'
-
 services:
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     restart: 'no'
     volumes:
-      - prometheus_data:/prometheus
-      - ./wger.rules:/etc/prometheus/wger.rules
+#      - prometheus_data:/prometheus
+#      - ./wger.rules:/etc/prometheus/wger.rules
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - 9090:9090
+      - "9090:9090"
     network_mode: host
 
   grafana:
@@ -17,10 +15,10 @@ services:
     environment:
       GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource"
     restart: 'no'
-    volumes:
-      - grafana_data:/var/lib/grafana
+#    volumes:
+#      - grafana_data:/var/lib/grafana
     ports:
-      - 3000:3000
+      - "3000:3000"
     depends_on:
       - prometheus
     network_mode: host
@@ -28,3 +26,7 @@ services:
 volumes:
     prometheus_data: {}
     grafana_data: {}
+
+networks:
+  default:
+    name: wger_network
