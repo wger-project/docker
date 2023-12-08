@@ -25,6 +25,7 @@ services:
 #      - "443:443"
 #    volumes:
 #      - ./config/Caddyfile:/etc/caddy/Caddyfile
+#      - caddy_data:/data
 #      - static:/wger/static:ro
 #      - media:/wger/media:ro
 #
@@ -47,3 +48,6 @@ services:
     depends_on:
       celery_worker:
         condition: service_healthy
+
+#volumes:
+#  caddy_data:
