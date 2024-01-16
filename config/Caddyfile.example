@@ -15,15 +15,15 @@
 
     admin :2019
 
-	log access-json {
-		include http.log.access.wger
-		output file /var/log/www/access.log
-	}
+    log access-json {
+        include http.log.access.wger
+        output file /var/log/www/access.log
+    }
 
-	log access-console {
-	    include http.log.access.wger
-		format console
-	}
+    log access-console {
+        include http.log.access.wger
+    	format console
+    }
 }
 
 #your.domain.example.com {
