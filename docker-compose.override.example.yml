@@ -25,7 +25,9 @@ services:
 #      - "443:443"
 #    volumes:
 #      - ./config/Caddyfile:/etc/caddy/Caddyfile
-#      - caddy_data:/data
+#      - caddy-data:/data
+#      - caddy-logs:/var/www/logs
+#      - caddy-config:/config
 #      - static:/wger/static:ro
 #      - media:/wger/media:ro
 #
@@ -51,3 +53,6 @@ services:
 
 #volumes:
 #  caddy_data:
+#  caddy-data:
+#  caddy-config:
+#  caddy-logs:
