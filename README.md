@@ -82,10 +82,11 @@ the ingredients (will take some time):
     docker compose exec web python3 manage.py sync-exercises
     docker compose exec web python3 manage.py download-exercise-images
     docker compose exec web python3 manage.py download-exercise-videos
+    docker compose exec web python3 manage.py sync-ingredients
     docker compose exec web wger load-online-fixtures
 
-(these steps can be configured to run automatically on startup, see the options
-in `prod.env`.)
+(these steps can be configured to run automatically on startup or regularly in the
+background, see the options in `prod.env`.)
     
 
 Then open <http://localhost> (or your server's IP) and log in as: **admin**,
