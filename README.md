@@ -76,17 +76,21 @@ To start all services:
 
     docker compose up -d
   
-Optionally download current exercises from wger.de, exercise images and
-the ingredients (will take some time):
+Optionally download current exercises, exercise images and the ingredients 
+from wger.de. Please note that `load-online-fixtures` will overwrite any local
+changes you might have while `sync-ingredients` should be used afterward once
+you have imported the initial fixtures:
 
     docker compose exec web python3 manage.py sync-exercises
     docker compose exec web python3 manage.py download-exercise-images
     docker compose exec web python3 manage.py download-exercise-videos
-    docker compose exec web python3 manage.py sync-ingredients
+ 
     docker compose exec web wger load-online-fixtures
+    # afterwards:
+    docker compose exec web python3 manage.py sync-ingredients
 
-(these steps can be configured to run automatically on startup or regularly in the
-background, see the options in `prod.env`.)
+(these steps are configured by default to run regularly in the background, but 
+can also run on startup as well, see the options in `prod.env`.)
     
 
 Then open <http://localhost> (or your server's IP) and log in as: **admin**,
