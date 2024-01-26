@@ -5,8 +5,16 @@ services:
   web:
     env_file:
       - ./config/prod.env
+      - ./config/wger-local.env # Only add the variables that you have changed
 
-      # Only add the variables that you have changed
+  celery_worker:
+    env_file:
+      - ./config/prod.env
+      - ./config/wger-local.env
+
+  celery_beat:
+    env_file:
+      - ./config/prod.env
       - ./config/wger-local.env
 
 #
