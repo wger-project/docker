@@ -1,0 +1,52 @@
+services:
+
+  web:
+    image: wger/server:latest
+    container_name: wger_dev_server
+    user: "${UID}:${GID}"
+    env_file:
+      - ../config/prod.env
+      - ../config/dev.env
+      #- ../config/local.env
+    volumes:
+      - type: bind
+        source: /Users/roland/Entwicklung/wger/server
+        target: /home/wger/src
+    ports:
+      - "8000:8000"
+    # We use something here that never ends. The server is started manually
+    command: tail -f /dev/null
+
+  cache:
+    image: redis
+    container_name: wger_dev_cache
+    expose:
+      - 6379
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  #db:
+  #  image: postgres:15-alpine
+  #  container_name: wger_dev_db
+  #  environment:
+  #    - POSTGRES_USER=wger
+  #    - POSTGRES_PASSWORD=wger
+  #    - POSTGRES_DB=wger
+  #  expose:
+  #    - 5432
+  #  healthcheck:
+  #    test: pg_isready -U wger
+  #    interval: 10s
+  #    timeout: 5s
+  #    retries: 5
+  #    start_period: 30s
+  #  restart: unless-stopped
+
+networks:
+  default:
+    name: wger_dev_network
