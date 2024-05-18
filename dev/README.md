@@ -1,5 +1,8 @@
 # Development compose file for wger - WIP
 
+https://www.jetbrains.com/help/pycharm/using-docker-compose-as-a-remote-interpreter.html
+https://code.visualstudio.com/docs/containers/quickstart-python
+
 ## First start
 
 ```shell
