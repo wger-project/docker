@@ -17,5 +17,5 @@ python3 manage.py migrate
 ## Usage
 ```shell
 UID=${UID} GID=${GID} docker compose up
-python3 manage runserver 0.0.0.0:8000
+python3 manage.py runserver 0.0.0.0:8000
 ```
