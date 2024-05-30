@@ -1,2 +1,4 @@
 /config/Caddyfile
 /docker-compose.override.yml
+/grafana/web.yml
+/grafana/prometheus.yml

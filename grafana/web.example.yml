@@ -1,0 +1,3 @@
+basic_auth_users:
+    # admin : adminadmin
+    admin: $2b$12$SBshyt4Rw6HD1t4lDfE8geSlbWyTcAPKaGzGk4pM6VszCkNJy7e8G
