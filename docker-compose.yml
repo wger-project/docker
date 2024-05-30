@@ -43,6 +43,7 @@ services:
       test: service nginx status
       interval: 10s
       timeout: 5s
+      start_period: 300s
       retries: 5
     restart: unless-stopped
 
@@ -62,6 +63,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   cache:
@@ -76,6 +78,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   celery_worker:
@@ -94,6 +97,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   celery_beat:
     image: wger/server:latest

@@ -1,0 +1,67 @@
+# Example override file. Copy as docker-compose.override.yml and edit as needed
+
+services:
+
+  web:
+    env_file:
+      - ./config/prod.env
+      - ./config/wger-local.env # Only add the variables that you have changed
+
+  celery_worker:
+    env_file:
+      - ./config/prod.env
+      - ./config/wger-local.env
+
+  celery_beat:
+    env_file:
+      - ./config/prod.env
+      - ./config/wger-local.env
+
+#
+# Example configuration using caddy instead of nginx. Since we don't want to
+# change the main compose file as it would break existing deployments, the nginx
+# service needs to stay there. Here we simply remove any exposed ports
+
+#  caddy:
+#    image: caddy:latest
+#    container_name: wger_caddy
+#    depends_on:
+#      - web
+#    ports:
+#      - "2019:2019"
+#      - "80:80"
+#      - "443:443"
+#      - "443:443/udp"
+#    volumes:
+#      - ./config/Caddyfile:/etc/caddy/Caddyfile
+#      - caddy-data:/data
+#      - caddy-logs:/var/www/logs
+#      - caddy-config:/config
+#      - static:/wger/static:ro
+#      - media:/wger/media:ro
+#
+#  nginx:
+#    ports: !reset []
+
+  celery_flower:
+    image: wger/server:latest
+    container_name: wger_celery_flower
+    command: /start-flower
+    env_file:
+      - ./config/prod.env
+    ports:
+      - "5555:5555"
+    healthcheck:
+      test: wget --no-verbose --tries=1 http://localhost:5555/healthcheck
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      celery_worker:
+        condition: service_healthy
+
+#volumes:
+#  caddy_data:
+#  caddy-data:
+#  caddy-config:
+#  caddy-logs:
