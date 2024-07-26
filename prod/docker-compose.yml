@@ -15,7 +15,7 @@ services:
       cache:
         condition: service_healthy
     env_file:
-      - ./config/prod.env
+      - ../config/prod.env
     volumes:
       - static:/home/wger/static
       - media:/home/wger/media
@@ -86,7 +86,7 @@ services:
     container_name: wger_celery_worker
     command: /start-worker
     env_file:
-      - ./config/prod.env
+      - ../config/prod.env
     volumes:
       - media:/home/wger/media
     depends_on:
@@ -106,7 +106,7 @@ services:
     volumes:
       - celery-beat:/home/wger/beat/
     env_file:
-      - ./config/prod.env
+      - ../config/prod.env
     depends_on:
       celery_worker:
         condition: service_healthy

@@ -1,14 +1,20 @@
 <img src="https://raw.githubusercontent.com/wger-project/wger/master/wger/core/static/images/logos/logo.png" width="100" height="100" alt="wger logo" />
 
 
-# Production...ish docker compose image for wger
+# docker compose stacks for wger
 
-## Usage
+Contains 3 docker compose environments:
 
-This docker compose file starts up a production environment with gunicorn
+* prod: production-ish
+* dev (uses sqlite)
+* dev-postgres (uses postgresql)
+
+## Introduction
+
+The prod docker compose file starts up a production-ish environment with gunicorn
 as the webserver, postgres as a database and redis for caching with nginx
-used as a reverse proxy. If you want to develop, take a look at the docker
-compose file in the application repository.
+used as a reverse proxy.
+The two develop environments don't use redis (caching) or celery (jobs) or nginx.
 
 The database, static files and uploaded images are mounted as volumes so
 the data is persisted. The only thing you need to do is update the docker
@@ -72,7 +78,8 @@ For more information and possibilities consult <https://docs.docker.com/compose/
 
 ### 1 - Start
 
-To start all services:
+1. Cd into the environment of your choice.
+2. To start all services:
 
     docker compose up -d
   
@@ -133,8 +140,8 @@ e.g.
 
 ## Deployment
 
-The easiest way to deploy this application is to use a reverse proxy like nginx
-or traefik. You can change the port this application exposes and reverse proxy
+The easiest way to deploy this application to prod is to use a reverse proxy like
+nginx or traefik. You can change the port this application exposes and reverse proxy
 your domain to it. For this just edit the "nginx" service in docker-compose.yml and
 set the port to some value, e.g. `"8080:80"` then configure your proxy to forward
 requests to it, e.g. for nginx (no other ports need to be changed, they are used
@@ -319,3 +326,32 @@ All the code and the content is freely available:
 The application is licenced under the Affero GNU General Public License 3 or
 later (AGPL 3+).
 
+
+## Development environments
+
+Clone https://github.com/wger-project/wger to a folder of your choice.
+
+Edit `dev/docker-compose.yml` and set the correct `source: /Users/roland/Entwicklung/wger/server` 
+
+```shell
+docker compose up
+docker compose exec web /bin/bash
+cp extras/docker/development/settings.py .
+
+wger bootstrap
+# bootstrap should do:
+# yarn install
+# yarn build:css:sass
+python3 manage.py migrate # ignore nutrition new migration
+python3 manage.py sync-exercises
+wger load-online-fixtures
+cp /home/wger/db/database.sqlite /home/wger/db/database.sqlite.orig # make a backup
+```
+
+## Usage
+```shell
+docker compose up
+python3 manage.py runserver 0.0.0.0:8000
+```
+
+The server should restart automatically when you change code, etc.
