@@ -14,7 +14,7 @@ Contains 3 docker compose environments:
 The prod docker compose file starts up a production-ish environment with gunicorn
 as the webserver, postgres as a database and redis for caching with nginx
 used as a reverse proxy.
-The two develop environments don't use redis (caching) or celery (jobs) or nginx.
+The two develop environments don't use redis (caching), celery (jobs) or nginx.
 
 The database, static files and uploaded images are mounted as volumes so
 the data is persisted. The only thing you need to do is update the docker
@@ -329,29 +329,37 @@ later (AGPL 3+).
 
 ## Development environments
 
-Clone https://github.com/wger-project/wger to a folder of your choice.
+Note: the docker images assume a wger user id of 1000.  Since we mount the code
+and write from the image into your code repository, you may run into permission errors
+if your user id is not 1000. We don't have a good solution for such situation yet.
+Check your user id with `echo $UID`.
 
-Edit `dev/docker-compose.yml` and set the correct `source: /Users/roland/Entwicklung/wger/server` 
+1. Clone https://github.com/wger-project/wger to a folder of your choice.
+2. `cd` into the environment of your choice (dev or dev-postgres)
+3. Edit `dev/docker-compose.yml` and update `source: /Users/roland/Entwicklung/wger/server`
+   to correspond to the location where you have checked out the wger server git repo.
+
 
 ```shell
 docker compose up
 docker compose exec web /bin/bash
 cp extras/docker/development/settings.py .
 
-wger bootstrap
-# bootstrap should do:
-# yarn install
-# yarn build:css:sass
-python3 manage.py migrate # ignore nutrition new migration
-python3 manage.py sync-exercises
-wger load-online-fixtures
-cp /home/wger/db/database.sqlite /home/wger/db/database.sqlite.orig # make a backup
-```
+wger bootstrap                     # this creates initial db tables, runs yarn install, yarn build:css:sass, etc
+python3 manage.py migrate          # safe to ignore: Your models in app(s): 'exercises', 'nutrition' have changes that are not yet reflected in a migration, and so won't be applied.
+python3 manage.py sync-exercises   # pull exercises from wger.de (or other source you have defined)
+wger load-online-fixtures          # pull nutrition information
 
-## Usage
-```shell
-docker compose up
+# if you use sqlite, at this time you can make a backup if you want
+# such that if you mess something up, you don't have to start from scratch
+cp /home/wger/db/database.sqlite /home/wger/db/database.sqlite.orig
+
+# finally, this is important, start the actual server!
 python3 manage.py runserver 0.0.0.0:8000
 ```
 
+You can now login on http://localhost:8000 - there is one user account: admin, with password adminadmin
 The server should restart automatically when you change code, etc.
+
+If you use `dev` you can use the `sqlite3` program to execute queries against the database file.
+For `postgres-sqlite` you can use `pgcli -h localhost -p 5432 -u wger` on your host, with password `wger`
