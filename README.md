@@ -5,7 +5,7 @@
 
 Contains 3 docker compose environments:
 
-* prod: production-ish
+* prod: production-ish (in root of this repository)
 * dev (uses sqlite)
 * dev-postgres (uses postgresql)
 
