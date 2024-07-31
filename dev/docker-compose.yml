@@ -1,0 +1,33 @@
+services:
+  web:
+    image: wger/server:latest
+    container_name: wger_dev_server
+    env_file:
+      - ../config/prod.env
+      - ../config/dev.env
+      - ../config/dev-sqlite.env
+    volumes:
+      - type: bind
+        source: /home/dieter/code/wger-wger
+        target: /home/wger/src
+    ports:
+      - "8000:8000"
+    # We use something here that never ends. The server is started manually
+    command: tail -f /dev/null
+
+  cache:
+    image: redis
+    container_name: wger_dev_cache
+    expose:
+      - 6379
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+networks:
+  default:
+    name: wger_dev_network
