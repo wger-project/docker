@@ -8,7 +8,6 @@
 services:
   web:
     image: wger/server:latest
-    container_name: wger_server
     depends_on:
       db:
         condition: service_healthy
@@ -31,7 +30,6 @@ services:
 
   nginx:
     image: nginx:stable
-    container_name: wger_nginx
     depends_on:
       - web
     volumes:
@@ -50,7 +48,6 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: wger_db
     environment:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
@@ -69,7 +66,6 @@ services:
 
   cache:
     image: redis
-    container_name: wger_cache
     expose:
       - 6379
     volumes:
@@ -84,7 +80,6 @@ services:
 
   celery_worker:
     image: wger/server:latest
-    container_name: wger_celery_worker
     command: /start-worker
     env_file:
       - ./config/prod.env
@@ -102,7 +97,6 @@ services:
 
   celery_beat:
     image: wger/server:latest
-    container_name: wger_celery_beat
     command: /start-beat
     volumes:
       - celery-beat:/home/wger/beat/
