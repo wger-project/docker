@@ -1,7 +1,8 @@
+name: wger-dev-postgres
+
 services:
   web:
     image: wger/server:latest
-    container_name: wger_dev_server
     env_file:
       - ../config/prod.env
       - ../config/dev.env
@@ -16,7 +17,6 @@ services:
 
   cache:
     image: redis
-    container_name: wger_dev_cache
     expose:
       - 6379
     healthcheck:
@@ -29,13 +29,12 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: wger_dev_db
     environment:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
     volumes:
-      - postgres-dev-data:/var/lib/postgresql/data/
+      - postgres-data:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
     expose:
@@ -49,7 +48,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres-dev-data:
-networks:
-  default:
-    name: wger_dev_network
+  postgres-data:

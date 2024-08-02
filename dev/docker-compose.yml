@@ -1,7 +1,8 @@
+name: wger-dev
+
 services:
   web:
     image: wger/server:latest
-    container_name: wger_dev_server
     env_file:
       - ../config/prod.env
       - ../config/dev.env
@@ -17,7 +18,6 @@ services:
 
   cache:
     image: redis
-    container_name: wger_dev_cache
     expose:
       - 6379
     healthcheck:
@@ -27,7 +27,3 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
-
-networks:
-  default:
-    name: wger_dev_network
