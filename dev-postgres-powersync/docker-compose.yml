@@ -2,7 +2,7 @@ name: wger-dev-postgres-powersync
 
 services:
   web:
-    image: wger/server:powersync
+    image: wger/server:latest
     depends_on:
       db:
         condition: service_healthy
@@ -14,13 +14,9 @@ services:
       # From the PowerSync service name
       # This is just used to populate the JWT audience
       POWERSYNC_URL: powersync-dev
-
-      # Keys here for demonstration
-      POWERSYNC_PUBLIC_KEY: ${DEMO_JWKS_PUBLIC_KEY}
-      POWERSYNC_PRIVATE_KEY: ${DEMO_JWKS_PRIVATE_KEY}
     volumes:
       - type: bind
-        source: /home/dieter/code/wger-wger
+        source: /Users/roland/Entwicklung/wger/server
         target: /home/wger/src
     ports:
       - "8000:8000"

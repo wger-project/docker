@@ -52,22 +52,11 @@ replication:
       sslmode: disable # 'verify-full' (default) or 'verify-ca' or 'disable'
       # 'disable' is OK for local/private networks, not for public networks
 
-      # Required for verify-ca, optional for verify-full
-      # cacert: ${PS_PG_CA_CERT}
-
-      # Include a certificate here for HTTPs
-      # client_certificate: ${PS_PG_CLIENT_CERT}
-      # client_private_key: ${PS_PG_CLIENT_PRIVATE_KEY}
-
-# This is valid if using the `mongo` service defined in `ps-mongo.yaml`
 
 # Connection settings for sync bucket storage
 storage:
   type: mongodb
   uri: !env PS_MONGO_URI
-  # Use these if authentication is required. The user should have `readWrite` and `dbAdmin` roles
-  # username: my-mongo-user
-  # password: my-password
 
 # The port which the PowerSync API server will listen on
 port: !env PS_PORT

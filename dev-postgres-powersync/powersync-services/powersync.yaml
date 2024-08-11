@@ -55,15 +55,6 @@ services:
       # The port which the PowerSync API server should run on
       PS_PORT: ${PS_PORT}
 
-      #  CA certificate for Postgres connection
-      # PS_PG_CA_CERT:
-
-      # Client certificate for Postgres connection
-      # PS_PG_CLIENT_CERT:
-
-      # Client private key for Postgres connection
-      # PS_PG_CLIENT_PRIVATE_KEY:
-
       # Potential JWKs public key template
       # PS_JWK_N:
       # PS_JWK_E:
