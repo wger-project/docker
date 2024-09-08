@@ -69,18 +69,10 @@ sync_rules:
 client_auth:
   # Enable this if using Supabase Auth
   # supabase: true
+  allow_local_jwks: true
 
   # JWKS URIs can be specified here
   jwks_uri: !env PS_JWKS_URL
-
-  # Optional static collection of public keys for JWT verification
-  # jwks:
-  #   keys:
-  #     - kty: 'RSA'
-  #       n: '${PS_JWK_N}'
-  #       e: '${PS_JWK_E}'
-  #       alg: 'RS256'
-  #       kid: '${PS_JWK_KID}'
 
   # JWKS audience
   audience: ["powersync-dev", "powersync"]
