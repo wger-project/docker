@@ -6,10 +6,17 @@ bucket_definitions:
   global:
     data:
       - select * from exercises_muscle
-
-#  user_lists:
-#     Separate bucket per todo list
-#    parameters: select id as list_id from lists where owner_id = token_parameters.user_id
-#    data:
-#      - select * from lists where id = bucket.list_id
-#      - select * from todos where list_id = bucket.list_id
+  nutrition_plan:
+    parameters: SELECT token_parameters.user_id as user_id
+    data:
+      - select * from nutrition_nutritionplan where user_id = bucket.user_id
+  by_plan_table:
+    parameters: SELECT id as plan_id FROM nutrition_nutritionplan WHERE user_id = token_parameters.user_id
+    data:
+      - SELECT * FROM nutrition_meal WHERE nutrition_meal.plan_id = bucket.plan_id
+      - select * from nutrition_logitem WHERE nutrition_logitem.plan_id = bucket.plan_id
+  # ingredient 1<->N log N-1 plan N-1 user
+  #                post N-1 board N-1 user
+  # also
+  # mealItem has a meal_id and ingredient_id
+  #

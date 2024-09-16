@@ -16,7 +16,7 @@ services:
       POWERSYNC_URL: powersync-dev
     volumes:
       - type: bind
-        source: /Users/roland/Entwicklung/wger/server
+        source: ${WGER_CODEPATH}
         target: /home/wger/src
     ports:
       - "8000:8000"
