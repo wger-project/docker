@@ -34,17 +34,20 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:15-alpine
+    build:
+      context: ../postgres
+      dockerfile: Dockerfile
     environment:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
     volumes:
-      - postgres-data:/var/lib/postgresql/data/
+      - postgres-dev-data:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
     expose:
       - 5432
+    # "-c", "log_statement=all", "-c", "log_min_error_statement=DEBUG1"
     command: ["postgres", "-c", "wal_level=logical"]
     healthcheck:
       test: pg_isready -U wger
@@ -55,7 +58,11 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres-data:
+  postgres-dev-data:
+
+networks:
+  default:
+    name: wger-dev-network
 
 include:
   - path: powersync-services/mongo.yaml
