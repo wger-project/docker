@@ -1,0 +1,69 @@
+name: wger-dev-postgres-powersync
+
+services:
+  web:
+    image: wger/server:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ../config/prod.env
+      - ../config/dev.env
+    # django backend should do some powersync stuff..
+    environment:
+      # From the PowerSync service name
+      # This is just used to populate the JWT audience
+      POWERSYNC_URL: powersync-dev
+    volumes:
+      - type: bind
+        source: ${WGER_CODEPATH}
+        target: /home/wger/src
+    ports:
+      - "8000:8000"
+
+  cache:
+    image: redis
+    expose:
+      - 6379
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  db:
+    build:
+      context: ../postgres
+      dockerfile: Dockerfile
+    environment:
+      - POSTGRES_USER=wger
+      - POSTGRES_PASSWORD=wger
+      - POSTGRES_DB=wger
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    # "-c", "log_statement=all", "-c", "log_min_error_statement=DEBUG1"
+    command: ["postgres", "-c", "wal_level=logical"]
+    healthcheck:
+      test: pg_isready -U wger
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  postgres-dev-data:
+
+networks:
+  default:
+    name: wger-dev-network
+
+include:
+  - path: powersync-services/mongo.yaml
+  - path: powersync-services/powersync.yaml
