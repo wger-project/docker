@@ -1,2 +1,3 @@
 /config/Caddyfile
 /docker-compose.override.yml
+/dev-postgres-powersync/.env
