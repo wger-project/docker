@@ -46,8 +46,6 @@ services:
       # POWERSYNC_SYNC_RULES_B64: "[base64 encoded sync rules]"
       # or e.g.: Via a command line parameter
       #     command: ['start', '-r', 'unified', '-sync64', '[base64 encoded content]']
-
-      PS_MONGO_URI: mongodb://mongo:27017/powersync_wger
       PS_JWKS_URL: http://web:8000/api/v2/powersync-keys
 
     ports:
