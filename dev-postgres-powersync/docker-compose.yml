@@ -2,7 +2,8 @@ name: wger-dev-postgres-powersync
 
 services:
   web:
-    image: wger/server:latest
+    build:
+      dockerfile: ../dev/server.dev.Dockerfile
     depends_on:
       db:
         condition: service_healthy
