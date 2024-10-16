@@ -3,7 +3,9 @@ name: wger-dev-postgres-powersync
 services:
   web:
     build:
-      dockerfile: ../dev/server.dev.Dockerfile
+      pull: true
+      context: ${WGER_CODEPATH}
+      dockerfile: ./extras/docker/development/Dockerfile
     depends_on:
       db:
         condition: service_healthy

@@ -3,7 +3,9 @@ name: wger-dev
 services:
   web:
     build:
-      dockerfile: server.dev.Dockerfile
+      pull: true
+      context: ${WGER_CODEPATH}
+      dockerfile: ./extras/docker/development/Dockerfile
     env_file:
       - ../config/prod.env
       - ../config/dev.env
