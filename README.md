@@ -5,15 +5,16 @@
 
 Contains 3 docker compose environments:
 
-* prod: production-ish (in root of this repository)
+* prod (in root of this repository)
 * dev (uses sqlite)
 * dev-postgres (uses postgresql)
 
 ## Introduction
 
-The prod docker compose file starts up a production-ish environment with gunicorn
+The prod docker compose file starts up a production environment with gunicorn
 as the webserver, postgres as a database and redis for caching with nginx
 used as a reverse proxy.
+
 The two develop environments don't use redis (caching), celery (jobs) or nginx.
 
 The database, static files and uploaded images are mounted as volumes so
@@ -24,6 +25,8 @@ backup this data.
 It is recommended to regularly pull the latest version of the images from this
 repository, since sometimes new configurations or environmental variables are
 added.
+
+# Production
 
 ### Configuration
 
@@ -302,32 +305,7 @@ rm backup.sql
 If you want to build the images yourself, clone the wger repository and follow
 the instructions for the devel image in the `extras/docker` folder.
 
-
-## Contact
-
-Feel free to contact us if you found this useful or if there was something that
-didn't behave as you expected. We can't fix what we don't know about, so please
-report liberally. If you're not sure if something is a bug or not, feel free to
-file a bug anyway.
-
-* discord: <https://discord.gg/rPWFv6W>
-* issue tracker: <https://github.com/wger-project/docker/issues>
-* twitter: <https://twitter.com/wger_project>
-
-
-## Sources
-
-All the code and the content is freely available:
-
-* <https://github.com/wger-project/>
-
-## Licence
-
-The application is licenced under the Affero GNU General Public License 3 or
-later (AGPL 3+).
-
-
-## Development environments
+# Development environments
 
 Note: the docker images assume a wger user id of 1000.  Since we mount the code
 and write from the image into your code repository, you may run into permission errors
@@ -336,8 +314,8 @@ Check your user id with `echo $UID`.
 
 1. Clone https://github.com/wger-project/wger to a folder of your choice.
 2. `cd` into the environment of your choice (dev or dev-postgres)
-3. Edit `dev/docker-compose.yml` and update `source: /Users/roland/Entwicklung/wger/server`
-   to correspond to the location where you have checked out the wger server git repo.
+3. Copy `.env.example` to `.env` and set the path to correspond to the location where
+   you have checked out the wger server git repo.
 
 
 ```shell
@@ -363,3 +341,29 @@ The server should restart automatically when you change code, etc.
 
 If you use `dev` you can use the `sqlite3` program to execute queries against the database file.
 For `postgres-sqlite` you can use `pgcli -h localhost -p 5432 -u wger` on your host, with password `wger`
+
+## Contact
+
+Feel free to contact us if you found this useful or if there was something that
+didn't behave as you expected. We can't fix what we don't know about, so please
+report liberally. If you're not sure if something is a bug or not, feel free to
+file a bug anyway.
+
+* discord: <https://discord.gg/rPWFv6W>
+* issue tracker: <https://github.com/wger-project/docker/issues>
+* twitter: <https://twitter.com/wger_project>
+
+
+## Sources
+
+All the code and the content is freely available:
+
+* <https://github.com/wger-project/>
+
+## Licence
+
+The application is licenced under the Affero GNU General Public License 3 or
+later (AGPL 3+).
+
+
+

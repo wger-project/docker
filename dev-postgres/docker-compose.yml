@@ -2,13 +2,16 @@ name: wger-dev-postgres
 
 services:
   web:
-    image: wger/server:latest
+    build:
+      pull: true
+      context: ${WGER_CODEPATH}
+      dockerfile: ./extras/docker/development/Dockerfile
     env_file:
       - ../config/prod.env
       - ../config/dev.env
     volumes:
       - type: bind
-        source: /home/dieter/code/wger-wger
+        source: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
         target: /home/wger/src
     ports:
       - "8000:8000"
