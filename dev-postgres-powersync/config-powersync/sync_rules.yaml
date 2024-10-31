@@ -10,7 +10,7 @@ bucket_definitions:
   by_user_id:
     parameters: SELECT token_parameters.user_id as user_id
     data:
-      - select * from nutrition_nutritionplan where user_id = bucket.user_id
+      - select * from ivm_nutrition_nutritionplan as nutrition_nutritionplan where user_id = bucket.user_id
       - select * from ivm_nutrition_meal as nutrition_meal where user_id = bucket.user_id
       - select * from ivm_nutrition_mealitem as nutrition_mealitem where user_id = bucket.user_id
       - select * from ivm_nutrition_logitem as nutrition_logitem where user_id = bucket.user_id
