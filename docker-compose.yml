@@ -17,6 +17,7 @@ services:
       - ./config/prod.env
     volumes:
       - static:/home/wger/static
+      - media:/home/wger/media
     expose:
       - 8000
     healthcheck:
