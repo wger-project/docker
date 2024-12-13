@@ -6,6 +6,15 @@ services:
       pull: true
       context: ${WGER_CODEPATH}
       dockerfile: ./extras/docker/development/Dockerfile
+    develop:
+      watch:
+        - action: sync
+          path: ${WGER_CODEPATH}/wger
+          target: /home/wger/src
+        - action: rebuild
+          path: ${WGER_CODEPATH}/requirements.txt
+        - action: rebuild
+          path: ${WGER_CODEPATH}/requirements_dev.txt
     env_file:
       - ../config/prod.env
       - ../config/dev.env
@@ -15,8 +24,9 @@ services:
         target: /home/wger/src
     ports:
       - "8000:8000"
-    # We use something here that never ends. The server is started manually
-    command: tail -f /dev/null
+
+    # If you want to start the server manually (or via your IDE, etc.), uncomment this
+    #command: tail -f /dev/null
 
   cache:
     image: redis
