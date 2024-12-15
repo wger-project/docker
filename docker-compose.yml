@@ -52,8 +52,8 @@ services:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
-#    volumes:
-#      - postgres-data:/var/lib/postgresql/data/
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
     expose:
       - 5432
     healthcheck:
