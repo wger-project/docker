@@ -191,10 +191,10 @@ will kick in.
 To solve this, update the env file and either
 
 * manually set a list of your domain names and/or server IPs 
-  `CSRF_TRUSTED_ORIGINS=https://my.domain.example.com,https://118.999.881.119`
+  `CSRF_TRUSTED_ORIGINS=https://my.domain.example.com,https://118.999.881.119:8008`
   If you are unsure what origin to add here, set the debug setting to true, restart
   and try again, the error message that appears will have the origin prominently
-  displayed.
+  displayed. Note: the port is important!
 * or set the `X-Forwarded-Proto` header like in the example and set
   `X_FORWARDED_PROTO_HEADER_SET=True`. If you do this consult the
   [documentation](https://docs.djangoproject.com/en/4.1/ref/settings/#secure-proxy-ssl-header)
