@@ -321,7 +321,7 @@ Check your user id with `echo $UID`.
 ```shell
 docker compose up
 docker compose exec web /bin/bash
-cp extras/docker/development/settings.py .
+cp extras/docker/production/settings.py .
 
 wger bootstrap                     # this creates initial db tables, runs yarn install, yarn build:css:sass, etc
 python3 manage.py migrate          # safe to ignore: Your models in app(s): 'exercises', 'nutrition' have changes that are not yet reflected in a migration, and so won't be applied.
