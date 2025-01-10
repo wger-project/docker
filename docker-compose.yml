@@ -106,6 +106,7 @@ services:
       celery_worker:
         condition: service_healthy
 
+# Heads up, if you remove the volumes and use folders directly, you *will* run into problems!
 volumes:
   postgres-data:
   celery-beat:
