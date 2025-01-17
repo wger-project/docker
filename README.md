@@ -95,9 +95,12 @@ you have imported the initial fixtures:
     docker compose exec web python3 manage.py download-exercise-images
     docker compose exec web python3 manage.py download-exercise-videos
  
+    # Loads a base set of ingredients
     docker compose exec web wger load-online-fixtures
-    # afterwards:
-    docker compose exec web python3 manage.py sync-ingredients
+    
+    # optionally run this afterwards to sync all the ingredients (around 1GB,
+    # this process takes a loooong time):
+    docker compose exec web python3 manage.py sync-ingredients-async
 
 (these steps are configured by default to run regularly in the background, but 
 can also run on startup as well, see the options in `prod.env`.)
