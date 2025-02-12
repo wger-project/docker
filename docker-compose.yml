@@ -106,13 +106,15 @@ services:
       celery_worker:
         condition: service_healthy
 
-# Heads up, if you remove the volumes and use folders directly, you *will* run into problems!
 volumes:
   postgres-data:
   celery-beat:
-  static:
-  media:
   redis-data:
+
+  # Heads up, if you remove these volumes and use folders directly, you will most likely
+  # run into permission problems!
+  media:
+  static:
 
 networks:
   default:
