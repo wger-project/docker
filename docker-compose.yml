@@ -111,8 +111,9 @@ volumes:
   celery-beat:
   redis-data:
 
-  # Heads up, if you remove these volumes and use folders directly, you will most likely
-  # run into permission problems!
+  # Heads up, if you remove these volumes and use folders directly you need to chown them
+  # to the UID and GID 1000 even if it doesn't exist on your system. Also, they should
+  # be readable by everyone.
   media:
   static:
 
