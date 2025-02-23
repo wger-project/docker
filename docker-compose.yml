@@ -78,6 +78,10 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+    # You probably want to limit the memory usage of the cache, otherwise it might
+    # hog all the available memory. Remove or change according to your needs.
+    #mem_limit: 5gb
+
   celery_worker:
     image: wger/server:latest
     command: /start-worker
