@@ -37,10 +37,12 @@ For example, you might not want to run the application on port 80 because some
 other service in your network is already using it. For this, simply create a new
 file called `docker-compose.override.yml` with the following content:
 
-    services:
-      nginx:
-        ports:
-          - "8080:80"
+```yml
+services:
+  nginx:
+    ports:
+      - "8080:80"
+```
 
 Now the port setting will be overwritten from the configured nginx service when
 you do a `docker compose up`. However, note that compose will concatenate both sets
@@ -53,29 +55,33 @@ and add it after the provided `prod.env` for the web service (again, this is
 `docker-compose.override.yml`). There you add the settings that you changed, and only
 those, which makes it easier to troubleshoot, etc.:
 
-    web:
-      env_file:
-        - ./config/prod.env
-        - ./config/my.env
+```yml
+web:
+  env_file:
+    - ./config/prod.env
+    - ./config/my.env
+```
 
 To add a web interface for the celery queue, add a new service to the override file:
 
-    celery_flower:
-      image: wger/server:latest
-      container_name: wger_celery_flower
-      command: /start-flower
-      env_file:
-        - ./config/prod.env
-      ports:
-        - "5555:5555"
-      healthcheck:
-        test: wget --no-verbose --tries=1 http://localhost:5555/healthcheck
-        interval: 10s
-        timeout: 5s
-        retries: 5
-      depends_on:
-        celery_worker:
-          condition: service_healthy
+```yml
+celery_flower:
+  image: wger/server:latest
+  container_name: wger_celery_flower
+  command: /start-flower
+  env_file:
+    - ./config/prod.env
+  ports:
+    - "5555:5555"
+  healthcheck:
+    test: wget --no-verbose --tries=1 http://localhost:5555/healthcheck
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  depends_on:
+    celery_worker:
+      condition: service_healthy
+```
 
 For more information and possibilities consult <https://docs.docker.com/compose/extends/>
 
@@ -84,23 +90,27 @@ For more information and possibilities consult <https://docs.docker.com/compose/
 1. Cd into the environment of your choice.
 2. To start all services:
 
-    docker compose up -d
-  
+```sh
+docker compose up -d
+```
+ 
 Optionally download current exercises, exercise images and the ingredients 
 from wger.de. Please note that `load-online-fixtures` will overwrite any local
 changes you might have while `sync-ingredients` should be used afterward once
 you have imported the initial fixtures:
 
-    docker compose exec web python3 manage.py sync-exercises
-    docker compose exec web python3 manage.py download-exercise-images
-    docker compose exec web python3 manage.py download-exercise-videos
- 
-    # Loads a base set of ingredients
-    docker compose exec web wger load-online-fixtures
-    
-    # optionally run this afterwards to sync all the ingredients (around 1GB,
-    # this process takes a loooong time):
-    docker compose exec web python3 manage.py sync-ingredients-async
+```sh
+docker compose exec web python3 manage.py sync-exercises
+docker compose exec web python3 manage.py download-exercise-images
+docker compose exec web python3 manage.py download-exercise-videos
+
+# Loads a base set of ingredients
+docker compose exec web wger load-online-fixtures
+
+# optionally run this afterwards to sync all the ingredients (around 1GB,
+# this process takes a loooong time):
+docker compose exec web python3 manage.py sync-ingredients-async
+```
 
 (these steps are configured by default to run regularly in the background, but 
 can also run on startup as well, see the options in `prod.env`.)
@@ -114,35 +124,47 @@ password **adminadmin**
 
 Just remove the containers and pull the newest version:
 
-    docker compose down
-    docker compose pull
-    docker compose up
+```sh
+docker compose down
+docker compose pull
+docker compose up
+```
 
 ### 3 - Lifecycle Management
 
 To stop all services issue a stop command, this will preserve all containers
 and volumes:
 
-    docker compose stop
+```sh
+docker compose stop
+```
 
 To start everything up again:
 
-    docker compose start
+```sh
+docker compose start
+```
 
 To remove all containers (except for the volumes)
 
-    docker compose down
+```sh
+docker compose down
+```
 
 To view the logs:
 
-    docker compose logs -f
+```sh
+docker compose logs -f
+```
 
 You might need to issue other commands or do other manual work in the container,
 e.g.
 
-     docker compose exec web yarn install
-     docker compose exec --user root web /bin/bash
-     docker compose exec --user postgres db psql wger -U wger
+```sh
+docker compose exec web yarn install
+docker compose exec --user root web /bin/bash
+docker compose exec --user postgres db psql wger -U wger
+```
 
 ## Deployment
 
@@ -215,7 +237,7 @@ this can be done with a simple file. Create the file `/etc/systemd/system/wger.s
 and enter the following content (check where the absolute path of the docker
 command is with `which docker`)
 
-```
+```ini
 [Unit]
 Description=wger docker compose service
 PartOf=docker.service
@@ -243,7 +265,7 @@ after a reboot.
 **Database volume:** The most important thing to backup. For this just make
 a dump and restore it when needed
 
-```
+```sh
 # Stop all other containers so the db is not changed while you export it
 docker compose stop web nginx cache celery_worker celery_beat
 docker compose exec db pg_dumpall --clean --username wger > backup.sql
