@@ -30,6 +30,8 @@
 localhost {
     log wger
 
+    encode
+
     reverse_proxy web:8000
 
     handle /static/* {
