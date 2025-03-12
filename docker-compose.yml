@@ -15,35 +15,25 @@ services:
         condition: service_healthy
     env_file:
       - ./config/prod.env
+    environment:
+      - LOG_FILE=/var/log/wger/server.log
     volumes:
       - static:/home/wger/static
       - media:/home/wger/media
+      #- ./logs/server:/var/log/wger
     expose:
       - 8000
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000
       interval: 10s
       timeout: 5s
       start_period: 300s
       retries: 5
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:stable
-    depends_on:
-      - web
-    volumes:
-      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
-      - static:/wger/static:ro
-      - media:/wger/media:ro
-    ports:
-      - "80:80"
-    healthcheck:
-      test: service nginx status
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     restart: unless-stopped
 
   db:
@@ -57,6 +47,11 @@ services:
       - postgres-data:/var/lib/postgresql/data/
     expose:
       - 5432
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     healthcheck:
       test: pg_isready -U wger
       interval: 10s
@@ -69,6 +64,11 @@ services:
     image: redis
     expose:
       - 6379
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     volumes:
       - redis-data:/data
     healthcheck:
@@ -88,8 +88,16 @@ services:
     command: /start-worker
     env_file:
       - ./config/prod.env
+    environment:
+      - LOG_FILE=/var/log/celery/celery.log
     volumes:
       - media:/home/wger/media
+      #- ./logs/celery:/var/log/celery
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     depends_on:
       web:
         condition: service_healthy
@@ -103,10 +111,18 @@ services:
   celery_beat:
     image: wger/server:latest
     command: /start-beat
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     volumes:
       - celery-beat:/home/wger/beat/
+      #- ./logs/celery:/var/log/celery
     env_file:
       - ./config/prod.env
+    environment:
+      - LOG_FILE=/var/log/celery/beat.log
     depends_on:
       celery_worker:
         condition: service_healthy

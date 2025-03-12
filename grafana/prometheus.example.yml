@@ -13,6 +13,7 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
      - targets: [ 'caddy:2019' ]
+
   - job_name: django
     metrics_path: /prometheus/super-secret-path/metrics
     static_configs:

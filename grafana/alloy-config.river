@@ -1,0 +1,62 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+// use **/*.log to find log files recursively if needed
+local.file_match "app_log_files" {
+
+  path_targets = [
+    { "__path__" = "/logs/web/*.log",         "service" = "web",          "job" = "wger" },
+    { "__path__" = "/logs/server/*.log",      "service" = "server",       "job" = "wger" },
+    { "__path__" = "/logs/celery/celery.log", "service" = "celery",       "job" = "wger" },
+    { "__path__" = "/logs/celery/beat.log",   "service" = "celery_beat",  "job" = "wger" },
+
+    //{ "__path__" = "/logs/db/*.log",            "service" = "db",            "job" = "wger" },
+    //{ "__path__" = "/logs/cache/*.log",         "service" = "cache",         "job" = "wger" },
+  ]
+
+  sync_period = "15s"
+}
+
+// Read the log files discovered by local.file_match
+loki.source.file "read_app_logs" {
+  targets    = local.file_match.app_log_files.targets
+  forward_to = [loki.process.python_traceback.receiver]
+
+  // Uncomment this if your application writes logs in JSON format to the files
+  // format = "json"
+}
+
+// Multiline processing to join Python tracebacks
+loki.process "python_traceback" {
+  forward_to = [loki.relabel.extract_filename.receiver]
+
+  stage.multiline {
+    firstline = "^(INFO|DEBUG|WARNING|ERROR|CRITICAL) \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"
+  }
+}
+
+// Optional Relabeling: Add extra context if needed
+loki.relabel "extract_filename" {
+  forward_to = [loki.write.loki_endpoint.receiver] // Send relabeled logs to Loki
+
+  // Rule: Extract the filename from the full path
+  rule {
+    source_labels = ["__path__"]
+    regex         = ".*/([^/]+\\.log)"
+    target_label  = "filename"
+  }
+
+  // Note: 'job' and 'service' labels are already attached by local.file_match targets
+}
+
+// Define the Loki endpoint where logs will be sent
+loki.write "loki_endpoint" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+  // external_labels can be set here, but labels from the targets ('job', 'service')
+  // and relabeling ('filename') are automatically included.
+  // external_labels = {}
+}
