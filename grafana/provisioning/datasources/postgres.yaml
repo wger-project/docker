@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    isDefault: false
+    jsonData:
+      database: wger
+      user: wger
+      sslmode: "disable"  # Change to "require" if using SSL
+      postgresVersion: 1500  # Adjust for your PostgreSQL version (1500 = 15.x)
+      timescaledb: false  # Set to true if using TimescaleDB
+    secureJsonData:
+      password: "wger"

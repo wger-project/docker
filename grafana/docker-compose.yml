@@ -18,29 +18,37 @@ services:
   grafana:
     image: grafana/grafana:latest
     environment:
-      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource"
+      - GF_SECURITY_ADMIN_PASSWORD=adminadmin
+      - GF_PROVISIONING_DASHBOARDS_ENABLE=1
+      - GF_PROVISIONING_DASHBOARDS_PATH=/etc/grafana/provisioning/dashboards
+      - GF_PROVISIONING_DATASOURCES_ENABLE=1
+      - GF_PROVISIONING_DATASOURCES_PATH=/etc/grafana/provisioning/datasources
     restart: 'no'
     volumes:
-      - grafana_data:/var/lib/grafana
-    expose:
-      - 3000
-
-  loki:
-    image: grafana/loki:latest
+      - ./provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./dashboards:/var/lib/grafana/dashboards
     ports:
-      - "3100:3100"
-    volumes:
-      - ./loki-config.yaml:/etc/loki/local-config.yaml
-    command: -config.file=/etc/loki/local-config.yaml
+      - "3000:3000"
+#    expose:
+#      - 3000
 
-  alloy:
-    image: grafana/alloy:latest
-    volumes:
-      - docker_caddy-logs:/var/log/www
-      - ./config.alloy:/etc/alloy/config.alloy
-    ports:
-      - "9080:9080"
-    command:  --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+#  loki:
+#    image: grafana/loki:latest
+#    ports:
+#      - "3100:3100"
+#    volumes:
+#      - ./loki-config.yaml:/etc/loki/local-config.yaml
+#    command: -config.file=/etc/loki/local-config.yaml
+#
+#  alloy:
+#    image: grafana/alloy:latest
+#    volumes:
+#      - docker_caddy-logs:/var/log/www
+#      - ./config.alloy:/etc/alloy/config.alloy
+#    ports:
+#      - "9080:9080"
+#    command:  --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
 
 #  node_exporter:
 #    image: prom/node-exporter:latest
@@ -56,7 +64,6 @@ services:
 
 volumes:
   prometheus_data:
-  grafana_data:
   docker_caddy-logs:
     external: true
 
