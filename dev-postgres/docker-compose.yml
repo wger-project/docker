@@ -1,0 +1,54 @@
+name: wger-dev-postgres
+
+services:
+  web:
+    build:
+      pull: true
+      context: ${WGER_CODEPATH}
+      dockerfile: ./extras/docker/development/Dockerfile
+    env_file:
+      - ../config/prod.env
+      - ../config/dev.env
+    volumes:
+      - type: bind
+        source: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
+        target: /home/wger/src
+    ports:
+      - "8000:8000"
+    # We use something here that never ends. The server is started manually
+    command: tail -f /dev/null
+
+  cache:
+    image: redis
+    expose:
+      - 6379
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=wger
+      - POSTGRES_PASSWORD=wger
+      - POSTGRES_DB=wger
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    healthcheck:
+      test: pg_isready -U wger
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

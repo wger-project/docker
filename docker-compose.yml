@@ -8,7 +8,6 @@
 services:
   web:
     image: wger/server:latest
-    container_name: wger_server
     depends_on:
       db:
         condition: service_healthy
@@ -25,12 +24,12 @@ services:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000
       interval: 10s
       timeout: 5s
+      start_period: 300s
       retries: 5
     restart: unless-stopped
 
   nginx:
     image: nginx:stable
-    container_name: wger_nginx
     depends_on:
       - web
     volumes:
@@ -43,17 +42,17 @@ services:
       test: service nginx status
       interval: 10s
       timeout: 5s
-      start_period: 300s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   db:
     image: postgres:15-alpine
-    container_name: wger_db
     environment:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
+      - TZ=Europe/Berlin
     volumes:
       - postgres-data:/var/lib/postgresql/data/
     expose:
@@ -68,7 +67,6 @@ services:
 
   cache:
     image: redis
-    container_name: wger_cache
     expose:
       - 6379
     volumes:
@@ -81,9 +79,12 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+    # You probably want to limit the memory usage of the cache, otherwise it might
+    # hog all the available memory. Remove or change according to your needs.
+    #mem_limit: 5gb
+
   celery_worker:
     image: wger/server:latest
-    container_name: wger_celery_worker
     command: /start-worker
     env_file:
       - ./config/prod.env
@@ -101,7 +102,6 @@ services:
 
   celery_beat:
     image: wger/server:latest
-    container_name: wger_celery_beat
     command: /start-beat
     volumes:
       - celery-beat:/home/wger/beat/
@@ -114,9 +114,13 @@ services:
 volumes:
   postgres-data:
   celery-beat:
-  static:
-  media:
   redis-data:
+
+  # Heads up, if you remove these volumes and use folders directly you need to chown them
+  # to the UID and GID 1000 even if it doesn't exist on your system. Also, they should
+  # be readable by everyone.
+  media:
+  static:
 
 networks:
   default:

@@ -1,4 +1,6 @@
 /config/Caddyfile
 /docker-compose.override.yml
+/dev-postgres/.env
+/dev/.env
 /grafana/web.yml
 /grafana/prometheus.yml

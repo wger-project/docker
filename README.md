@@ -1,14 +1,21 @@
 <img src="https://raw.githubusercontent.com/wger-project/wger/master/wger/core/static/images/logos/logo.png" width="100" height="100" alt="wger logo" />
 
 
-# Production...ish docker compose image for wger
+# docker compose stacks for wger
 
-## Usage
+Contains 3 docker compose environments:
 
-This docker compose file starts up a production environment with gunicorn
+* prod (in root of this repository)
+* dev (uses sqlite)
+* dev-postgres (uses postgresql)
+
+## Introduction
+
+The prod docker compose file starts up a production environment with gunicorn
 as the webserver, postgres as a database and redis for caching with nginx
-used as a reverse proxy. If you want to develop, take a look at the docker
-compose file in the application repository.
+used as a reverse proxy.
+
+The two develop environments don't use redis (caching), celery (jobs) or nginx.
 
 The database, static files and uploaded images are mounted as volumes so
 the data is persisted. The only thing you need to do is update the docker
@@ -19,6 +26,8 @@ It is recommended to regularly pull the latest version of the images from this
 repository, since sometimes new configurations or environmental variables are
 added.
 
+# Production
+
 ### Configuration
 
 Instead of editing the compose file or the env file directly, it is recommended
@@ -28,10 +37,12 @@ For example, you might not want to run the application on port 80 because some
 other service in your network is already using it. For this, simply create a new
 file called `docker-compose.override.yml` with the following content:
 
-    services:
-      nginx:
-        ports:
-          - "8080:80"
+```yml
+services:
+  nginx:
+    ports:
+      - "8080:80"
+```
 
 Now the port setting will be overwritten from the configured nginx service when
 you do a `docker compose up`. However, note that compose will concatenate both sets
@@ -44,50 +55,62 @@ and add it after the provided `prod.env` for the web service (again, this is
 `docker-compose.override.yml`). There you add the settings that you changed, and only
 those, which makes it easier to troubleshoot, etc.:
 
-    web:
-      env_file:
-        - ./config/prod.env
-        - ./config/my.env
+```yml
+web:
+  env_file:
+    - ./config/prod.env
+    - ./config/my.env
+```
 
 To add a web interface for the celery queue, add a new service to the override file:
 
-    celery_flower:
-      image: wger/server:latest
-      container_name: wger_celery_flower
-      command: /start-flower
-      env_file:
-        - ./config/prod.env
-      ports:
-        - "5555:5555"
-      healthcheck:
-        test: wget --no-verbose --tries=1 http://localhost:5555/healthcheck
-        interval: 10s
-        timeout: 5s
-        retries: 5
-      depends_on:
-        celery_worker:
-          condition: service_healthy
+```yml
+celery_flower:
+  image: wger/server:latest
+  container_name: wger_celery_flower
+  command: /start-flower
+  env_file:
+    - ./config/prod.env
+  ports:
+    - "5555:5555"
+  healthcheck:
+    test: wget --no-verbose --tries=1 http://localhost:5555/healthcheck
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  depends_on:
+    celery_worker:
+      condition: service_healthy
+```
 
 For more information and possibilities consult <https://docs.docker.com/compose/extends/>
 
 ### 1 - Start
 
-To start all services:
+1. Cd into the environment of your choice.
+2. To start all services:
 
-    docker compose up -d
-  
+```sh
+docker compose up -d
+```
+ 
 Optionally download current exercises, exercise images and the ingredients 
 from wger.de. Please note that `load-online-fixtures` will overwrite any local
 changes you might have while `sync-ingredients` should be used afterward once
 you have imported the initial fixtures:
 
-    docker compose exec web python3 manage.py sync-exercises
-    docker compose exec web python3 manage.py download-exercise-images
-    docker compose exec web python3 manage.py download-exercise-videos
- 
-    docker compose exec web wger load-online-fixtures
-    # afterwards:
-    docker compose exec web python3 manage.py sync-ingredients
+```sh
+docker compose exec web python3 manage.py sync-exercises
+docker compose exec web python3 manage.py download-exercise-images
+docker compose exec web python3 manage.py download-exercise-videos
+
+# Loads a base set of ingredients
+docker compose exec web wger load-online-fixtures
+
+# optionally run this afterwards to sync all the ingredients (around 1GB,
+# this process takes a loooong time):
+docker compose exec web python3 manage.py sync-ingredients-async
+```
 
 (these steps are configured by default to run regularly in the background, but 
 can also run on startup as well, see the options in `prod.env`.)
@@ -101,40 +124,52 @@ password **adminadmin**
 
 Just remove the containers and pull the newest version:
 
-    docker compose down
-    docker compose pull
-    docker compose up
+```sh
+docker compose down
+docker compose pull
+docker compose up
+```
 
 ### 3 - Lifecycle Management
 
 To stop all services issue a stop command, this will preserve all containers
 and volumes:
 
-    docker compose stop
+```sh
+docker compose stop
+```
 
 To start everything up again:
 
-    docker compose start
+```sh
+docker compose start
+```
 
 To remove all containers (except for the volumes)
 
-    docker compose down
+```sh
+docker compose down
+```
 
 To view the logs:
 
-    docker compose logs -f
+```sh
+docker compose logs -f
+```
 
 You might need to issue other commands or do other manual work in the container,
 e.g.
 
-     docker compose exec web yarn install
-     docker compose exec --user root web /bin/bash
-     docker compose exec --user postgres db psql wger -U wger
+```sh
+docker compose exec web yarn install
+docker compose exec --user root web /bin/bash
+docker compose exec --user postgres db psql wger -U wger
+```
 
 ## Deployment
 
-The easiest way to deploy this application is to use a reverse proxy like nginx
-or traefik. You can change the port this application exposes and reverse proxy
+The easiest way to deploy this application to prod is to use a reverse proxy like
+nginx or traefik. You can change the port this application exposes and reverse proxy
 your domain to it. For this just edit the "nginx" service in docker-compose.yml and
 set the port to some value, e.g. `"8080:80"` then configure your proxy to forward
 requests to it, e.g. for nginx (no other ports need to be changed, they are used
@@ -181,10 +216,10 @@ will kick in.
 To solve this, update the env file and either
 
 * manually set a list of your domain names and/or server IPs 
-  `CSRF_TRUSTED_ORIGINS=https://my.domain.example.com,https://118.999.881.119`
+  `CSRF_TRUSTED_ORIGINS=https://my.domain.example.com,https://118.999.881.119:8008`
   If you are unsure what origin to add here, set the debug setting to true, restart
   and try again, the error message that appears will have the origin prominently
-  displayed.
+  displayed. Note: the port is important!
 * or set the `X-Forwarded-Proto` header like in the example and set
   `X_FORWARDED_PROTO_HEADER_SET=True`. If you do this consult the
   [documentation](https://docs.djangoproject.com/en/4.1/ref/settings/#secure-proxy-ssl-header)
@@ -202,7 +237,7 @@ this can be done with a simple file. Create the file `/etc/systemd/system/wger.s
 and enter the following content (check where the absolute path of the docker
 command is with `which docker`)
 
-```
+```ini
 [Unit]
 Description=wger docker compose service
 PartOf=docker.service
@@ -230,7 +265,7 @@ after a reboot.
 **Database volume:** The most important thing to backup. For this just make
 a dump and restore it when needed
 
-```
+```sh
 # Stop all other containers so the db is not changed while you export it
 docker compose stop web nginx cache celery_worker celery_beat
 docker compose exec db pg_dumpall --clean --username wger > backup.sql
@@ -295,6 +330,42 @@ rm backup.sql
 If you want to build the images yourself, clone the wger repository and follow
 the instructions for the devel image in the `extras/docker` folder.
 
+# Development environments
+
+Note: the docker images assume a wger user id of 1000.  Since we mount the code
+and write from the image into your code repository, you may run into permission errors
+if your user id is not 1000. We don't have a good solution for such situation yet.
+Check your user id with `echo $UID`.
+
+1. Clone https://github.com/wger-project/wger to a folder of your choice.
+2. `cd` into the environment of your choice (dev or dev-postgres)
+3. Copy `.env.example` to `.env` and set the path to correspond to the location where
+   you have checked out the wger server git repo.
+
+
+```shell
+docker compose up
+docker compose exec web /bin/bash
+cp extras/docker/production/settings.py .
+
+wger bootstrap                     # this creates initial db tables, runs yarn install, yarn build:css:sass, etc
+python3 manage.py migrate          # safe to ignore: Your models in app(s): 'exercises', 'nutrition' have changes that are not yet reflected in a migration, and so won't be applied.
+python3 manage.py sync-exercises   # pull exercises from wger.de (or other source you have defined)
+wger load-online-fixtures          # pull nutrition information
+
+# if you use sqlite, at this time you can make a backup if you want
+# such that if you mess something up, you don't have to start from scratch
+cp /home/wger/db/database.sqlite /home/wger/db/database.sqlite.orig
+
+# finally, this is important, start the actual server!
+python3 manage.py runserver 0.0.0.0:8000
+```
+
+You can now login on http://localhost:8000 - there is one user account: admin, with password adminadmin
+The server should restart automatically when you change code, etc.
+
+If you use `dev` you can use the `sqlite3` program to execute queries against the database file.
+For `postgres-sqlite` you can use `pgcli -h localhost -p 5432 -u wger` on your host, with password `wger`
 
 ## Contact
 
@@ -318,4 +389,6 @@ All the code and the content is freely available:
 
 The application is licenced under the Affero GNU General Public License 3 or
 later (AGPL 3+).
+
+
 
