@@ -1,0 +1,41 @@
+local.file_match "local_files" {
+    path_targets = [{"__path__" = "/var/log/caddy/*.log"}]
+    sync_period = "5s"
+}
+
+loki.source.file "log_scrape" {
+    targets    = local.file_match.local_files.targets
+    forward_to = [loki.process.filter_logs.receiver]
+    tail_from_end = true
+}
+
+loki.process "filter_logs" {
+    stage.drop {
+        source = ""
+        expression  = ".*Connection closed by authenticating user root"
+        drop_counter_reason = "noisy"
+    }
+    forward_to = [loki.write.grafana_loki.receiver]
+    stage.json {
+        expressions = {
+            level = "level",
+            message = "msg",
+            ts = "ts",
+            method = "method",
+            host = "host",
+            uri = "uri",
+            proto = "proto",
+            status = "status",
+            duration = "duration",
+            user_agent = "request.headers.User-Agent[0]",
+            remote_ip = "request.remote_ip",
+            referer = "request.headers.Referer[0]",
+        }
+    }
+}
+
+loki.write "grafana_loki" {
+    endpoint {
+      url = "http://loki:3100/loki/api/v1/push"
+    }
+  }

@@ -33,22 +33,22 @@ services:
 #    expose:
 #      - 3000
 
-#  loki:
-#    image: grafana/loki:latest
-#    ports:
-#      - "3100:3100"
-#    volumes:
-#      - ./loki-config.yaml:/etc/loki/local-config.yaml
-#    command: -config.file=/etc/loki/local-config.yaml
-#
-#  alloy:
-#    image: grafana/alloy:latest
-#    volumes:
-#      - docker_caddy-logs:/var/log/www
-#      - ./config.alloy:/etc/alloy/config.alloy
-#    ports:
-#      - "9080:9080"
-#    command:  --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+
+  alloy:
+    image: grafana/alloy:latest
+    volumes:
+      - docker_caddy-logs:/var/log/caddy
+      - ./alloy-config.river:/etc/alloy/config.alloy
+    ports:
+      - "9080:9080"
+    #command:  --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
 
 #  node_exporter:
 #    image: prom/node-exporter:latest
