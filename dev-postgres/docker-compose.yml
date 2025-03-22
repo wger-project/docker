@@ -4,18 +4,27 @@ services:
   web:
     build:
       pull: true
-      context: ${WGER_CODEPATH}
+      context: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
       dockerfile: ./extras/docker/development/Dockerfile
+    develop:
+      watch:
+        - action: sync
+          path: ${WGER_CODEPATH}/wger
+          target: /home/wger/src
+        - action: rebuild
+          path: ${WGER_CODEPATH}/requirements.txt
+        - action: rebuild
+          path: ${WGER_CODEPATH}/requirements_dev.txt
     env_file:
       - ../config/prod.env
       - ../config/dev.env
     volumes:
       - type: bind
-        source: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
+        source: ${WGER_CODEPATH}
         target: /home/wger/src
     ports:
       - "8000:8000"
-    # We use something here that never ends. The server is started manually
+
     command: tail -f /dev/null
 
   cache:
@@ -37,7 +46,7 @@ services:
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
     volumes:
-      - postgres-data:/var/lib/postgresql/data/
+      - postgres-data-dev:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
     expose:
@@ -51,4 +60,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres-data:
+  postgres-data-dev:
