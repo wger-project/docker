@@ -52,8 +52,9 @@ services:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
-#    volumes:
-#      - postgres-data:/var/lib/postgresql/data/
+      - TZ=Europe/Berlin
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
     expose:
       - 5432
     healthcheck:
@@ -77,6 +78,10 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
+
+    # You probably want to limit the memory usage of the cache, otherwise it might
+    # hog all the available memory. Remove or change according to your needs.
+    #mem_limit: 5gb
 
   celery_worker:
     image: wger/server:latest
@@ -109,9 +114,13 @@ services:
 volumes:
   postgres-data:
   celery-beat:
-  static:
-  media:
   redis-data:
+
+  # Heads up, if you remove these volumes and use folders directly you need to chown them
+  # to the UID and GID 1000 even if it doesn't exist on your system. Also, they should
+  # be readable by everyone.
+  media:
+  static:
 
 networks:
   default:
