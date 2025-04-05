@@ -1,5 +1,5 @@
 #
-# Please consult the `Deployment` section in the readme if you want to deploy
+# Please consult the `Deployment` section in the docs if you want to deploy
 # this. You *need* to keep this nginx service, even if you have your own,
 # otherwise the static files will not be served correctly! If you do remove
 # it, configure yours similarly to what's in config/nginx.conf
@@ -70,7 +70,9 @@ services:
     expose:
       - 6379
     volumes:
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
       - redis-data:/data
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf"]
     healthcheck:
       test: redis-cli ping
       interval: 10s
