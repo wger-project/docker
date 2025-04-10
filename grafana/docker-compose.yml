@@ -44,8 +44,8 @@ services:
   alloy:
     image: grafana/alloy:latest
     volumes:
-      - ../logs:/logs
       - ./alloy-config.river:/etc/alloy/config.alloy
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "9080:9080"
       #- "12345:12345"

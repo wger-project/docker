@@ -15,7 +15,7 @@ scrape_configs:
      - targets: [ 'caddy:2019' ]
 
   - job_name: django
-    metrics_path: /prometheus/super-secret-path/metrics
+    metrics_path: /prometheus/metrics
     static_configs:
     - targets: ['web:8000']
 
@@ -23,7 +23,7 @@ scrape_configs:
 
     # Override the global default and scrape targets from this job every 5 seconds.
     scrape_interval: 15s
-
+  
     static_configs:
       - targets: ['node_exporter:9100']
 
