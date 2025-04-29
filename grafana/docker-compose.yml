@@ -1,0 +1,66 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    restart: 'no'
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./web.yml:/etc/prometheus/web.yml
+      - ./wger.rules:/etc/prometheus/wger.rules
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.config.file=/etc/prometheus/web.yml
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=adminadmin
+      - GF_PROVISIONING_DASHBOARDS_ENABLE=1
+      - GF_PROVISIONING_DASHBOARDS_PATH=/etc/grafana/provisioning/dashboards
+      - GF_PROVISIONING_DATASOURCES_ENABLE=1
+      - GF_PROVISIONING_DATASOURCES_PATH=/etc/grafana/provisioning/datasources
+    restart: 'no'
+    volumes:
+      - ./provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+#    expose:
+#      - 3000
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+
+  alloy:
+    image: grafana/alloy:latest
+    volumes:
+      - ./alloy-config.river:/etc/alloy/config.alloy
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "9080:9080"
+      #- "12345:12345"
+    command:
+      - run
+      - /etc/alloy/config.alloy
+    restart:
+      unless-stopped
+    depends_on:
+        - loki
+
+volumes:
+  prometheus_data:
+
+networks:
+  default:
+    name: wger_network
+    external: true

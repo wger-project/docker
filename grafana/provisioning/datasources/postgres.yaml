@@ -1,0 +1,16 @@
+apiVersion: 1
+
+datasources:
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    isDefault: false
+    jsonData:
+      database: wger
+      user: wger
+      sslmode: disable
+      postgresVersion: 1500  # 1500 = 15.x
+      timescaledb: false
+    secureJsonData:
+      password: wger
