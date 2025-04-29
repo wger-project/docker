@@ -9,20 +9,16 @@ services:
     develop:
       watch:
         - action: sync
-          path: ${WGER_CODEPATH}/wger
+          path: ${WGER_CODEPATH}
           target: /home/wger/src
         - action: rebuild
-          path: ${WGER_CODEPATH}/requirements.txt
+          path: ${WGER_CODEPATH}/pyproject.toml
         - action: rebuild
-          path: ${WGER_CODEPATH}/requirements_dev.txt
+          path: ${WGER_CODEPATH}/package.json
     env_file:
       - ../config/prod.env
       - ../config/dev.env
       - ../config/dev-sqlite.env
-    volumes:
-      - type: bind
-        source: ${WGER_CODEPATH}
-        target: /home/wger/src
     ports:
       - "8000:8000"
 
