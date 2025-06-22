@@ -43,7 +43,7 @@ services:
 #    ports: !reset []
 
   celery_flower:
-    image: wger/server:latest
+    image: docker.io/wger/server:latest
     command: /start-flower
     env_file:
       - ./config/prod.env
