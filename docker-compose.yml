@@ -7,7 +7,7 @@
 
 services:
   web:
-    image: wger/server:latest
+    image: docker.io/wger/server:latest
     depends_on:
       db:
         condition: service_healthy
@@ -34,7 +34,7 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:stable
+    image: docker.io/nginx:stable
     depends_on:
       - web
     volumes:
@@ -52,7 +52,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:15-alpine
+    image: docker.io/postgres:15-alpine
     environment:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
@@ -76,7 +76,7 @@ services:
     restart: unless-stopped
 
   cache:
-    image: redis
+    image: docker.io/redis
     expose:
       - 6379
     logging:
@@ -101,7 +101,7 @@ services:
     #mem_limit: 5gb
 
   celery_worker:
-    image: wger/server:latest
+    image: docker.io/wger/server:latest
     command: /start-worker
     env_file:
       - ./config/prod.env
@@ -123,7 +123,7 @@ services:
       start_period: 30s
 
   celery_beat:
-    image: wger/server:latest
+    image: docker.io/wger/server:latest
     command: /start-beat
     logging:
       driver: json-file
@@ -146,6 +146,8 @@ volumes:
   # Heads up, if you remove these volumes and use folders directly you need to chown them
   # to the UID and GID 1000 even if it doesn't exist on your system. Also, they should
   # be readable by everyone.
+  #
+  # https://wger.readthedocs.io/en/latest/production/docker.html#missing-static-files
   media:
   static:
 
