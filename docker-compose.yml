@@ -20,6 +20,11 @@ services:
       - media:/home/wger/media
     expose:
       - 8000
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000
       interval: 10s
@@ -57,6 +62,11 @@ services:
       - postgres-data:/var/lib/postgresql/data/
     expose:
       - 5432
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     healthcheck:
       test: pg_isready -U wger
       interval: 10s
@@ -69,6 +79,11 @@ services:
     image: docker.io/redis
     expose:
       - 6379
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     volumes:
       - ./config/redis.conf:/usr/local/etc/redis/redis.conf
       - redis-data:/data
@@ -92,6 +107,11 @@ services:
       - ./config/prod.env
     volumes:
       - media:/home/wger/media
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     depends_on:
       web:
         condition: service_healthy
@@ -105,6 +125,11 @@ services:
   celery_beat:
     image: docker.io/wger/server:latest
     command: /start-beat
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     volumes:
       - celery-beat:/home/wger/beat/
     env_file:
