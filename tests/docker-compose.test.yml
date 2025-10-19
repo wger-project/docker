@@ -1,0 +1,60 @@
+# Test environment for nginx configuration
+# This docker-compose file sets up:
+# - Mock backend server that echoes headers
+# - nginx with the configuration being tested
+# - Test runner that executes test scenarios
+
+services:
+  # Mock backend server (replaces wger application)
+  web:
+    image: python:3.11-slim
+    container_name: test_backend
+    working_dir: /app
+    volumes:
+      - ./mock_backend.py:/app/mock_backend.py:ro
+    command: python3 mock_backend.py 8000
+    networks:
+      - test_network
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000')"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # nginx with our configuration
+  nginx:
+    image: nginx:alpine
+    container_name: test_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ../config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - test_network
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # Test runner
+  test:
+    image: curlimages/curl:latest
+    container_name: test_runner
+    volumes:
+      - ./test_nginx_scenarios.sh:/tests/test_nginx_scenarios.sh:ro
+    environment:
+      - NGINX_URL=http://nginx:80
+    networks:
+      - test_network
+    depends_on:
+      nginx:
+        condition: service_healthy
+    command: sh -c "apk add --no-cache bash grep && bash /tests/test_nginx_scenarios.sh"
+
+networks:
+  test_network:
+    driver: bridge
