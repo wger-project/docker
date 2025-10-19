@@ -19,10 +19,6 @@ services:
       - ../config/prod.env
       - ../config/dev.env
       - ../config/dev-sqlite.env
-    volumes:
-      - type: bind
-        source: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
-        target: /home/wger/src
     ports:
       - "8000:8000"
 
