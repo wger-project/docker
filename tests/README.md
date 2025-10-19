@@ -20,13 +20,20 @@ docker compose -f docker-compose.test.yml down -v
 This suite validates that nginx correctly handles proxy headers in three real-world deployment scenarios:
 
 ### 1. Reverse Proxy Setup (Most Common)
-**Scenario:** User → HTTPS → Traefik/Caddy/nginx → nginx → wger
-**Challenge:** Preserve the original HTTPS protocol through the proxy chain
+**Scenarios:**
+- Direct: User → [HTTP|HTTPS] → Traefik/Caddy/nginx → nginx → wger
+- Port Forwarded: User → [HTTP|HTTPS] → Router → Port Forward → Traefik/Caddy/nginx → nginx → wger
+
+**Challenge:** Preserve the original protocol (HTTP or HTTPS) through the proxy chain
 **Why it matters:** Django's CSRF protection requires knowing the original protocol
+
+**What happens:** The reverse proxy (Traefik/Caddy/nginx) terminates SSL and sets `X-Forwarded-Proto` based on the incoming connection. Our nginx must preserve this header value.
 
 **Test coverage:**
 - ✅ X-Forwarded-Proto: http (when user connects via HTTP)
 - ✅ X-Forwarded-Proto: https (when user connects via HTTPS)
+
+**Note:** Port forwarding is transparent here - whether traffic goes directly to the reverse proxy or through a router's port forward, the reverse proxy still sets the header correctly.
 
 ### 2. Direct Connection
 **Scenario:** User → HTTP → nginx → wger (no reverse proxy)
@@ -36,13 +43,17 @@ This suite validates that nginx correctly handles proxy headers in three real-wo
 **Test coverage:**
 - ✅ Fallback to http when no X-Forwarded-Proto header present
 
-### 3. Port Forwarding (Home Routers)
-**Scenario:** User → Router → Port Forward → nginx → wger
+### 3. Port Forwarding Without Reverse Proxy
+**Scenario:** User → Router → Port Forward → nginx → wger (no Traefik/Caddy/etc.)
 **Challenge:** Router forwards traffic without setting proxy headers
-**Why it matters:** Same as direct connection - nginx must use $scheme
+**Why it matters:** nginx must fall back to its own $scheme since there's no reverse proxy
+
+**What happens:** The router simply forwards packets without adding any HTTP headers. nginx receives the connection directly and must use its own `$scheme` variable.
 
 **Test coverage:**
-- ✅ Same fallback behavior as direct connection
+- ✅ Same fallback behavior as direct connection (both use $scheme)
+
+**Note:** This is different from Scenario 1 with port forwarding - here there's NO reverse proxy, just a router forwarding ports directly to nginx.
 
 ### 4. WebSocket Support
 **Scenario:** Any deployment with real-time features

@@ -35,17 +35,18 @@ services:
       web:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:80/"]
       interval: 5s
       timeout: 3s
       retries: 3
 
   # Test runner
   test:
-    image: curlimages/curl:latest
+    image: python:3.11-slim
     container_name: test_runner
+    working_dir: /tests
     volumes:
-      - ./test_nginx_scenarios.sh:/tests/test_nginx_scenarios.sh:ro
+      - ./:/tests:ro
     environment:
       - NGINX_URL=http://nginx:80
     networks:
@@ -53,7 +54,7 @@ services:
     depends_on:
       nginx:
         condition: service_healthy
-    command: sh -c "apk add --no-cache bash grep && bash /tests/test_nginx_scenarios.sh"
+    command: sh -c "pip install -q -r requirements.txt && pytest -v --tb=short -p no:cacheprovider"
 
 networks:
   test_network:
