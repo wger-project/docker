@@ -24,7 +24,6 @@ services:
 
 #  caddy:
 #    image: caddy:latest
-#    container_name: wger_caddy
 #    depends_on:
 #      - web
 #    ports:
@@ -44,8 +43,7 @@ services:
 #    ports: !reset []
 
   celery_flower:
-    image: wger/server:latest
-    container_name: wger_celery_flower
+    image: docker.io/wger/server:latest
     command: /start-flower
     env_file:
       - ./config/prod.env

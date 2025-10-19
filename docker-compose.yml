@@ -1,5 +1,5 @@
 #
-# Please consult the `Deployment` section in the readme if you want to deploy
+# Please consult the `Deployment` section in the docs if you want to deploy
 # this. You *need* to keep this nginx service, even if you have your own,
 # otherwise the static files will not be served correctly! If you do remove
 # it, configure yours similarly to what's in config/nginx.conf
@@ -7,7 +7,7 @@
 
 services:
   web:
-    image: wger/server:latest
+    image: docker.io/wger/server:latest
     depends_on:
       db:
         condition: service_healthy
@@ -20,6 +20,11 @@ services:
       - media:/home/wger/media
     expose:
       - 8000
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://localhost:8000
       interval: 10s
@@ -29,7 +34,7 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:stable
+    image: docker.io/nginx:stable
     depends_on:
       - web
     volumes:
@@ -47,15 +52,21 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:15-alpine
+    image: docker.io/postgres:15-alpine
     environment:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
       - POSTGRES_DB=wger
+      - TZ=Europe/Berlin
     volumes:
       - postgres-data:/var/lib/postgresql/data/
     expose:
       - 5432
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     healthcheck:
       test: pg_isready -U wger
       interval: 10s
@@ -65,11 +76,18 @@ services:
     restart: unless-stopped
 
   cache:
-    image: redis
+    image: docker.io/redis
     expose:
       - 6379
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     volumes:
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
       - redis-data:/data
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf"]
     healthcheck:
       test: redis-cli ping
       interval: 10s
@@ -78,13 +96,22 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+    # You probably want to limit the memory usage of the cache, otherwise it might
+    # hog all the available memory. Remove or change according to your needs.
+    #mem_limit: 5gb
+
   celery_worker:
-    image: wger/server:latest
+    image: docker.io/wger/server:latest
     command: /start-worker
     env_file:
       - ./config/prod.env
     volumes:
       - media:/home/wger/media
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     depends_on:
       web:
         condition: service_healthy
@@ -96,8 +123,13 @@ services:
       start_period: 30s
 
   celery_beat:
-    image: wger/server:latest
+    image: docker.io/wger/server:latest
     command: /start-beat
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
     volumes:
       - celery-beat:/home/wger/beat/
     env_file:
@@ -109,9 +141,15 @@ services:
 volumes:
   postgres-data:
   celery-beat:
-  static:
-  media:
   redis-data:
+
+  # Heads up, if you remove these volumes and use folders directly you need to chown them
+  # to the UID and GID 1000 even if it doesn't exist on your system. Also, they should
+  # be readable by everyone.
+  #
+  # https://wger.readthedocs.io/en/latest/production/docker.html#missing-static-files
+  media:
+  static:
 
 networks:
   default:
