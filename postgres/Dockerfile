@@ -1,6 +1,6 @@
 FROM postgres:15-bookworm AS builder
 
-ENV VERSION=1.9
+ENV VERSION=1.12
 
 RUN apt-get update && \
     apt-get install -y \
