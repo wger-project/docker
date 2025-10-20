@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Mock backend server for testing nginx proxy configuration.
+"""Mock backend server for testing nginx proxy configuration.
 
 This server echoes back all received HTTP headers as JSON,
 allowing us to verify that nginx correctly forwards headers
