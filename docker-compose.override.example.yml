@@ -17,6 +17,31 @@ services:
       - ./config/prod.env
       - ./config/wger-local.env
 
+  #
+  # Example configuration to add Anubis as a debugging proxy in front of the web
+  # service. If you set up wger on a public server, and get flooded with ai crawler
+  # requests, you sadly will have to deal with them.
+  anubis:
+    image: ghcr.io/techarohq/anubis:latest
+    pull_policy: always
+    environment:
+      BIND: ":3000"
+      METRICS_BIND: ":9090"
+      TARGET: http://web:8000
+      POLICY_FNAME: "/data/cfg/anubis-rules.yml"
+      WEBMASTER_EMAIL: "hello@wger.de"
+
+      # generate with: openssl rand -hex 32
+      ED25519_PRIVATE_KEY_HEX: "dba7c07331693b7beaeae102765568dd3c35cc1b6b3b23adaeeb5ecee406cc71"
+    healthcheck:
+      test: [ "CMD", "anubis", "--healthcheck" ]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+      start_period: 500ms
+    volumes:
+      - "./config/anubis-rules.yml:/data/cfg/anubis-rules.yml:ro"
+
 #
 # Example configuration using caddy instead of nginx. Since we don't want to
 # change the main compose file as it would break existing deployments, the nginx
