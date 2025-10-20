@@ -1,0 +1,3 @@
+# Test dependencies for nginx configuration validation
+pytest>=7.4.0
+requests>=2.31.0
