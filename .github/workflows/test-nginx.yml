@@ -38,18 +38,17 @@ jobs:
 
       - name: Set up test environment
         run: |
-          chmod +x tests/test_nginx_scenarios.sh
           chmod +x tests/mock_backend.py
 
       - name: Start test services
         run: |
           cd tests
-          docker-compose -f docker-compose.test.yml up -d web nginx
+          docker compose -f docker-compose.test.yml up -d web nginx
 
           # Wait for services to be healthy
           echo "Waiting for services to be ready..."
           for i in {1..30}; do
-            if docker-compose -f docker-compose.test.yml ps | grep -q "healthy"; then
+            if docker compose -f docker-compose.test.yml ps | grep -q "healthy"; then
               echo "Services are healthy"
               break
             fi
@@ -58,30 +57,30 @@ jobs:
           done
 
           # Show service status
-          docker-compose -f docker-compose.test.yml ps
+          docker compose -f docker-compose.test.yml ps
 
-      - name: Run test scenarios
+      - name: Run pytest test suite
         run: |
           cd tests
-          docker-compose -f docker-compose.test.yml up --abort-on-container-exit test
+          docker compose -f docker-compose.test.yml up --abort-on-container-exit test
 
       - name: Show test logs on failure
         if: failure()
         run: |
           echo "=== nginx logs ==="
-          docker-compose -f tests/docker-compose.test.yml logs nginx
+          docker compose -f tests/docker-compose.test.yml logs nginx
           echo ""
           echo "=== backend logs ==="
-          docker-compose -f tests/docker-compose.test.yml logs web
+          docker compose -f tests/docker-compose.test.yml logs web
           echo ""
           echo "=== test logs ==="
-          docker-compose -f tests/docker-compose.test.yml logs test
+          docker compose -f tests/docker-compose.test.yml logs test
 
       - name: Cleanup
         if: always()
         run: |
           cd tests
-          docker-compose -f docker-compose.test.yml down -v
+          docker compose -f docker-compose.test.yml down -v
 
   test-summary:
     name: All Tests Passed
