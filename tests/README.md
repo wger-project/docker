@@ -1,6 +1,6 @@
 # nginx Configuration Test Suite
 
-Pytest-based test suite that validates nginx proxy configuration across all deployment scenarios.
+Professional pytest-based test suite that validates nginx proxy configuration across all deployment scenarios.
 
 ## Quick Start
 
