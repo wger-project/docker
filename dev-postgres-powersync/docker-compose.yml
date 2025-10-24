@@ -41,6 +41,9 @@ services:
       - POSTGRES_DB=wger
     volumes:
       - postgres-dev-data:/var/lib/postgresql/data/
+      # automatically import dump
+      #- ../wger-2025-09-09_19-25.dump:/docker-entrypoint-initdb.d/00-init-db.sql
+      #- ../wger-reset-password.sql:/docker-entrypoint-initdb.d/01-reset-pw.sql
     ports:
       - "5432:5432"
     expose:
