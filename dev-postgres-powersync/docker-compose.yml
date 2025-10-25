@@ -4,7 +4,7 @@ services:
   web:
     build:
       pull: true
-      context: ${WGER_CODEPATH}
+      context: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
       dockerfile: ./extras/docker/development/Dockerfile
     depends_on:
       db:
@@ -12,10 +12,15 @@ services:
     env_file:
       - ../config/prod.env
       - ../config/dev.env
-    volumes:
-      - type: bind
-        source: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
-        target: /home/wger/src
+    develop:
+      watch:
+        - action: sync
+          path: ${WGER_CODEPATH}
+          target: /home/wger/src
+        - action: rebuild
+          path: ${WGER_CODEPATH}/pyproject.toml
+        - action: rebuild
+          path: ${WGER_CODEPATH}/package.json
     ports:
       - "8000:8000"
 
@@ -42,8 +47,9 @@ services:
     volumes:
       - postgres-dev-data:/var/lib/postgresql/data/
       # automatically import dump
-      #- ../wger-2025-09-09_19-25.dump:/docker-entrypoint-initdb.d/00-init-db.sql
-      #- ../wger-reset-password.sql:/docker-entrypoint-initdb.d/01-reset-pw.sql
+#      - ../wger-2025-09-09_19-25.dump:/docker-entrypoint-initdb.d/00-init-db.sql:ro
+#      - ../wger-reset-password.sql:/docker-entrypoint-initdb.d/01-reset-pw.sql:ro
+#      - ../wger-cleanup.sql:/docker-entrypoint-initdb.d/02-cleanup.sql:ro
     ports:
       - "5432:5432"
     expose:

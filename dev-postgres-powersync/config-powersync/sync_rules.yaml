@@ -27,6 +27,9 @@ bucket_definitions:
     parameters: SELECT token_parameters.user_id AS user_id
     data:
       - SELECT uuid AS id, * FROM weight_weightentry WHERE user_id = bucket.user_id
+      - SELECT uuid AS id, * FROM manager_workoutlog WHERE user_id = bucket.user_id
+      - SELECT * FROM measurements_category WHERE user_id = bucket.user_id
+
 #      - select * from ivm_nutrition_nutritionplan as nutrition_nutritionplan where user_id = bucket.user_id
 #      - select * from ivm_nutrition_meal as nutrition_meal where user_id = bucket.user_id
 #      - select * from ivm_nutrition_mealitem as nutrition_mealitem where user_id = bucket.user_id
