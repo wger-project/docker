@@ -3,12 +3,17 @@
 # Note that changes to this file are not watched.
 # The service needs to be restarted for changes to take effect.
 # Warning, parameter queries have a limit of 1000 rows (before filtering)!
+config:
+  edition: 2
+
 bucket_definitions:
   global:
     data:
       # Core tables
       - SELECT * FROM core_language
       - SELECT * FROM core_license
+      - SELECT * FROM core_repetitionunit;
+      - SELECT * FROM core_weightunit;
 
       # Exercises
       - SELECT * FROM exercises_exercise
@@ -28,6 +33,7 @@ bucket_definitions:
     data:
       - SELECT uuid AS id, * FROM weight_weightentry WHERE user_id = bucket.user_id
       - SELECT uuid AS id, * FROM manager_workoutlog WHERE user_id = bucket.user_id
+      - SELECT uuid AS id, * FROM manager_workoutsession WHERE user_id = bucket.user_id
       - SELECT * FROM measurements_category WHERE user_id = bucket.user_id
 
 #      - select * from ivm_nutrition_nutritionplan as nutrition_nutritionplan where user_id = bucket.user_id
