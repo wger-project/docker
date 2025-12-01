@@ -2,3 +2,25 @@
 /docker-compose.override.yml
 /dev-postgres/.env
 /dev/.env
+# DevSecOps/Deployment
+.env.production
+.env.local
+config/redis.conf
+certs/
+logs/
+data/
+
+# Test artifacts
+test-results.xml
+test-output.log
+bandit-report.*
+dependency-check-report.json
+trivy-results.sarif
+semgrep.sarif
+zap-report/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

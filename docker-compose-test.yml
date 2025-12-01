@@ -1,0 +1,131 @@
+version: '3.9'
+
+# Test/Development Docker Compose for GitHub Actions CI/CD Pipeline
+# Lightweight version for running security tests
+
+services:
+  # PostgreSQL Database (lightweight)
+  db:
+    image: postgres:16-alpine
+    container_name: wger-test-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=wger
+      - POSTGRES_PASSWORD=test-password
+      - POSTGRES_DB=wger
+      - TZ=UTC
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data:rw
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wger"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wger-test-network
+
+  # Redis Cache (lightweight)
+  redis:
+    image: redis:7-alpine
+    container_name: wger-test-cache
+    restart: unless-stopped
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wger-test-network
+
+  # wger Web Application (test configuration)
+  web:
+    image: ghcr.io/wger-project/wger:latest
+    container_name: wger-test-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Django settings
+      - DJANGO_DEBUG=False
+      - DJANGO_SECRET_KEY=test-secret-key-do-not-use-in-production
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,web
+      - DJANGO_DB_ENGINE=django.db.backends.postgresql
+      - DJANGO_DB_HOST=db
+      - DJANGO_DB_NAME=wger
+      - DJANGO_DB_USER=wger
+      - DJANGO_DB_PASSWORD=test-password
+      
+      # Security settings (relaxed for testing)
+      - SECURE_SSL_REDIRECT=False
+      - CSRF_COOKIE_SECURE=False
+      - SESSION_COOKIE_SECURE=False
+      
+      # Cache settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CACHE_BACKEND=redis
+      - CACHE_HOST=redis
+      - CACHE_PORT=6379
+      
+      # File uploads
+      - USE_SECURE_UPLOADS=False
+      - MAX_UPLOAD_SIZE=5242880
+      
+      # Logging
+      - LOG_LEVEL=INFO
+    volumes:
+      - static-test-files:/home/wger/static:rw
+      - media-test-files:/home/wger/media:rw
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:8000/api/v2/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - wger-test-network
+
+  # Nginx (lightweight, for testing)
+  nginx:
+    image: nginx:alpine
+    container_name: wger-test-nginx
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    volumes:
+      - ./config/nginx-test.conf:/etc/nginx/conf.d/default.conf:ro
+      - static-test-files:/home/wger/static:ro
+      - media-test-files:/home/wger/media:ro
+    ports:
+      - "8080:80"
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/api/v2/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - wger-test-network
+
+volumes:
+  postgres-test-data:
+  static-test-files:
+  media-test-files:
+
+networks:
+  wger-test-network:
+    driver: bridge

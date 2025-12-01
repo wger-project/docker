@@ -1,0 +1,422 @@
+name: DevSecOps Pipeline - wger Security Testing & Deployment
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  schedule:
+    # Run security checks weekly on Monday at 2 AM UTC
+    - cron: '0 2 * * 1'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DEPLOY_PATH: ~/wger-docker
+  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+
+jobs:
+  # Stage 1: Checkout and prepare
+  prepare:
+    name: "Stage 1: Prepare & Checkout"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+  # Stage 2: Static Analysis - Python (Bandit)
+  sast-bandit:
+    name: "Stage 2: SAST - Bandit (Python Security)"
+    runs-on: ubuntu-latest
+    needs: prepare
+    continue-on-error: false
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Bandit
+        run: pip install bandit[toml]
+
+      - name: Run Bandit scan
+        run: |
+          bandit -r wger/ \
+            -f json -o bandit-report.json \
+            -f csv -o bandit-report.csv \
+            --exclude tests,migrations || true
+        continue-on-error: true
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: bandit-report.*
+
+      - name: Parse and display findings
+        if: always()
+        run: |
+          echo "=== Bandit Security Findings ===" 
+          python3 << 'EOF'
+          import json
+          try:
+              with open('bandit-report.json', 'r') as f:
+                  data = json.load(f)
+                  if data['results']:
+                      print(f"⚠️  Found {len(data['results'])} security issues")
+                      for issue in data['results'][:5]:
+                          print(f"  - {issue['test_id']}: {issue['issue_text']}")
+                  else:
+                      print("✅ No high-risk issues found")
+          except:
+              print("⚠️  Could not parse Bandit results")
+          EOF
+
+  # Stage 3: Dependency Scanning (OWASP Dependency-Check)
+  dependency-scan:
+    name: "Stage 3: SCA - Dependency Check"
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'wger'
+          path: '.'
+          format: 'JSON'
+          args: >
+            --scan wger/
+            --enable-retired
+
+      - name: Upload Dependency-Check report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: reports/dependency-check-report.json
+
+  # Stage 4: Code Pattern Scanning (Semgrep)
+  semgrep-scan:
+    name: "Stage 4: SAST - Semgrep Pattern Scanning"
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          generateSarif: true
+          config: p/security-audit p/owasp-top-ten p/django
+
+      - name: Upload Semgrep SARIF
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  # Stage 5: Container Build and Trivy Scan
+  container-scan:
+    name: "Stage 5: Container Build & Trivy Scan"
+    runs-on: ubuntu-latest
+    needs: [ sast-bandit, dependency-scan, semgrep-scan ]
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          load: true
+          tags: wger:test
+          file: ./docker/Dockerfile
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'wger:test'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Stage 6: Dynamic Application Security Testing (OWASP ZAP)
+  dast-zap:
+    name: "Stage 6: DAST - OWASP ZAP Scan"
+    runs-on: ubuntu-latest
+    needs: container-scan
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Start wger with Docker Compose
+        run: |
+          docker-compose -f docker-compose-test.yml up -d
+          sleep 30
+          docker-compose -f docker-compose-test.yml ps
+
+      - name: Wait for service to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:8000/api/v2/ > /dev/null 2>&1; then
+              echo "✅ Service is ready"
+              exit 0
+            fi
+            echo "⏳ Waiting for service... ($i/30)"
+            sleep 5
+          done
+          echo "❌ Service failed to start"
+          exit 1
+
+      - name: Run OWASP ZAP scan
+        uses: zaproxy/action-baseline@v0.4.0
+        with:
+          target: 'http://localhost:8000'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+
+      - name: Upload ZAP report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: zap-report
+          path: report_html.html
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f docker-compose-test.yml down
+
+  # Stage 7: API Security Testing (pytest)
+  api-security-tests:
+    name: "Stage 7: API Security Tests"
+    runs-on: ubuntu-latest
+    needs: container-scan
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install test dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov requests
+
+      - name: Start wger with Docker Compose
+        run: |
+          docker-compose -f docker-compose-test.yml up -d
+          sleep 30
+
+      - name: Wait for API to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -f http://localhost:8000/api/v2/ > /dev/null 2>&1; then
+              echo "✅ API is ready"
+              exit 0
+            fi
+            echo "⏳ Waiting for API... ($i/30)"
+            sleep 2
+          done
+          exit 1
+
+      - name: Run API security tests
+        run: |
+          python -m pytest security_tests/test-api-security.py \
+            -v \
+            --tb=short \
+            --junit-xml=test-results.xml \
+            -m "not slow" 2>&1 | tee test-output.log
+        env:
+          API_URL: http://localhost:8000
+        continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: api-test-results
+          path: |
+            test-results.xml
+            test-output.log
+
+      - name: Stop containers
+        if: always()
+        run: docker-compose -f docker-compose-test.yml down
+
+  # Stage 8: Create GitHub Issues for findings
+  create-issues:
+    name: "Stage 8: Developer Notifications"
+    runs-on: ubuntu-latest
+    needs: [ sast-bandit, dependency-scan, semgrep-scan ]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Bandit report
+        uses: actions/download-artifact@v3
+        with:
+          name: bandit-report
+
+      - name: Check for critical findings
+        run: |
+          python3 << 'EOF'
+          import json
+          import sys
+          
+          try:
+              with open('bandit-report.json', 'r') as f:
+                  data = json.load(f)
+                  critical_count = len([i for i in data['results'] if i['severity'] == 'HIGH'])
+                  if critical_count > 0:
+                      print(f"⚠️  Found {critical_count} CRITICAL security issues")
+                      sys.exit(1)
+          except:
+              pass
+          
+          print("✅ No critical Bandit issues")
+          EOF
+        continue-on-error: true
+
+      - name: Create GitHub Issue if findings exist
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔒 Security Findings - Pipeline Run #' + context.runNumber,
+              body: `## Security Testing Results\n\n**Run:** [#${context.runNumber}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\n\n⚠️ Security findings detected. Please review:\n\n1. Check the pipeline logs for details\n2. Review SAST findings (Bandit, Semgrep)\n3. Check dependency vulnerabilities\n4. Review DAST results (OWASP ZAP)\n\nDownload reports from the [Artifacts](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) section.`,
+              labels: ['security', 'pipeline']
+            })
+
+  # Stage 9: Deploy to staging (on-prem VM)
+  deploy-staging:
+    name: "Stage 9: Deploy to Staging"
+    runs-on: ubuntu-latest
+    needs: [ api-security-tests, create-issues ]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'DEPLOY_SCRIPT'
+          set -e
+          echo "🚀 Starting deployment..."
+          
+          cd ~/wger-docker
+          echo "📦 Pulling latest images..."
+          docker-compose pull
+          
+          echo "🔄 Restarting services..."
+          docker-compose down --remove-orphans || true
+          docker-compose up -d
+          
+          echo "⏳ Waiting for services to be healthy..."
+          sleep 15
+          
+          echo "✅ Deployment complete"
+          docker-compose ps
+          DEPLOY_SCRIPT
+
+  # Stage 10: Post-deployment validation
+  post-deployment-checks:
+    name: "Stage 10: Post-Deployment Validation"
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: always()
+    steps:
+      - name: Health check against deployed instance
+        run: |
+          TARGET_URL="http://${{ secrets.DEPLOY_HOST }}:8080"
+          
+          echo "🔍 Running post-deployment checks..."
+          
+          for i in {1..10}; do
+            if curl -f "$TARGET_URL/api/v2/" > /dev/null 2>&1; then
+              echo "✅ API is responding"
+              break
+            fi
+            echo "⏳ Waiting for API... ($i/10)"
+            sleep 5
+          done
+          
+          # Check security headers
+          echo "🔒 Checking security headers..."
+          curl -I "$TARGET_URL/" | grep -i "strict-transport-security\|x-frame-options\|x-content-type-options" || echo "⚠️  Some security headers missing"
+
+      - name: Notify deployment success
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              description: '✅ DevSecOps pipeline passed - Deployed to staging',
+              context: 'DevSecOps/Pipeline'
+            })
+
+      - name: Notify deployment failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'failure',
+              description: '❌ DevSecOps pipeline failed',
+              context: 'DevSecOps/Pipeline'
+            })

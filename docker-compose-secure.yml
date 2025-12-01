@@ -1,0 +1,274 @@
+# Secure Docker Compose for Production Deployment
+# Implements hardened configuration for wger with DevSecOps
+version: '3.9'
+
+services:
+  # =========================================================================
+  # WEB APPLICATION (Django + Gunicorn)
+  # =========================================================================
+  web:
+    image: ghcr.io/wger-project/wger:latest
+    container_name: wger-web
+    depends_on:
+      - db
+      - cache
+    environment:
+      # Django security settings
+      - DJANGO_DEBUG=False
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost}
+      
+      # SSL/HTTPS configuration
+      - SECURE_SSL_REDIRECT=True
+      - SESSION_COOKIE_SECURE=True
+      - CSRF_COOKIE_SECURE=True
+      - SECURE_BROWSER_XSS_FILTER=True
+      - SECURE_CONTENT_SECURITY_POLICY=True
+      - SECURE_HSTS_SECONDS=31536000
+      - SECURE_HSTS_INCLUDE_SUBDOMAINS=True
+      - SECURE_HSTS_PRELOAD=True
+      
+      # Database configuration
+      - DJANGO_DB_ENGINE=django.db.backends.postgresql
+      - DJANGO_DB_NAME=wger
+      - DJANGO_DB_USER=wger
+      - DJANGO_DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DJANGO_DB_HOST=db
+      - DJANGO_DB_PORT=5432
+      
+      # Cache configuration
+      - DJANGO_CACHE_BACKEND=django_redis.cache.RedisCache
+      - DJANGO_CACHE_LOCATION=redis://cache:6379/1
+      - DJANGO_CACHE_TIMEOUT=1296000
+      
+      # Logging configuration
+      - LOG_LEVEL=INFO
+      
+      # GDPR/Privacy settings
+      - GDPR_COMPLIANT=True
+      - DATA_RETENTION_DAYS=365
+      
+      # Security settings
+      - AXES_ENABLED=True
+      - AXES_FAILURE_LIMIT=10
+      - AXES_COOLOFF_TIME=30m
+      
+    volumes:
+      - static-volume:/home/wger/static:ro
+      - media-volume:/home/wger/media:rw
+      - ./config/settings.py:/home/wger/settings.py:ro
+      
+    expose:
+      - 8000
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-k", "https://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only_root_filesystem: false
+
+  # =========================================================================
+  # REVERSE PROXY (Nginx)
+  # =========================================================================
+  nginx:
+    image: nginx:latest-alpine
+    container_name: wger-nginx
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static-volume:/home/wger/static:ro
+      - media-volume:/home/wger/media:ro
+      - ./certs:/etc/nginx/ssl:ro
+    
+    environment:
+      - TZ=UTC
+      
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    read_only_root_filesystem: true
+    tmpfs:
+      - /var/run/nginx
+      - /var/cache/nginx
+
+  # =========================================================================
+  # DATABASE (PostgreSQL)
+  # =========================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: wger-db
+    environment:
+      - POSTGRES_DB=wger
+      - POSTGRES_USER=wger
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_INITDB_ARGS=-c shared_preload_libraries=pg_stat_statements
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./config/postgres-backup.sh:/usr/local/bin/backup.sh:ro
+      
+    ports:
+      - "5432:5432"
+      
+    expose:
+      - 5432
+      
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+      - SETUID
+      - SETGID
+    read_only_root_filesystem: true
+    tmpfs:
+      - /var/run/postgresql
+      - /tmp
+
+  # =========================================================================
+  # CACHE (Redis)
+  # =========================================================================
+  cache:
+    image: redis:7-alpine
+    container_name: wger-redis
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-data:/data
+      
+    expose:
+      - 6379
+      
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+      
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only_root_filesystem: true
+    tmpfs:
+      - /tmp
+
+  # =========================================================================
+  # CELERY WORKER (Background Tasks)
+  # =========================================================================
+  celery-worker:
+    image: ghcr.io/wger-project/wger:latest
+    container_name: wger-celery
+    command: celery -A wger worker --loglevel=info --max-tasks-per-child=1000
+    depends_on:
+      - cache
+      - db
+      - web
+    environment:
+      - DJANGO_DEBUG=False
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - CELERY_BROKER=redis://cache:6379/0
+      - CELERY_BACKEND=redis://cache:6379/1
+      - LOG_LEVEL=INFO
+      
+    volumes:
+      - media-volume:/home/wger/media:rw
+      
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # =========================================================================
+  # CELERY BEAT (Scheduled Tasks)
+  # =========================================================================
+  celery-beat:
+    image: ghcr.io/wger-project/wger:latest
+    container_name: wger-beat
+    command: celery -A wger beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    depends_on:
+      - cache
+      - db
+      - web
+    environment:
+      - DJANGO_DEBUG=False
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - CELERY_BROKER=redis://cache:6379/0
+      - CELERY_BACKEND=redis://cache:6379/1
+      - LOG_LEVEL=INFO
+      
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # =========================================================================
+  # MONITORING & LOGGING (Optional)
+  # =========================================================================
+  # Uncomment to enable monitoring
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   volumes:
+  #     - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   ports:
+  #     - "9090:9090"
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  static-volume:
+    driver: local
+  media-volume:
+    driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  default:
+    name: wger-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
