@@ -1,0 +1,53 @@
+# See Documentation for more information:
+# https://docs.powersync.com/usage/sync-rules
+# Note that changes to this file are not watched.
+# The service needs to be restarted for changes to take effect.
+# Warning, parameter queries have a limit of 1000 rows (before filtering)!
+config:
+  edition: 2
+
+bucket_definitions:
+  global:
+    data:
+      # Core tables
+      - SELECT * FROM core_language
+      - SELECT * FROM core_license
+      - SELECT * FROM core_repetitionunit;
+      - SELECT * FROM core_weightunit;
+
+      # Exercises
+      - SELECT * FROM exercises_exercise
+      - SELECT * FROM exercises_translation
+      - SELECT * FROM exercises_alias
+      - SELECT * FROM exercises_muscle
+      - SELECT * FROM exercises_exercise_muscles
+      - SELECT * FROM exercises_exercise_muscles_secondary
+      - SELECT * FROM exercises_equipment
+      - SELECT * FROM exercises_exercise_equipment
+      - SELECT * FROM exercises_exercisecategory
+      - SELECT * FROM exercises_exerciseimage
+      - SELECT * FROM exercises_exercisevideo
+      - SELECT * FROM exercises_variation
+  by_user_id:
+    parameters: SELECT token_parameters.user_id AS user_id
+    data:
+      - SELECT uuid AS id, * FROM weight_weightentry WHERE user_id = bucket.user_id
+      - SELECT uuid AS id, * FROM manager_workoutlog WHERE user_id = bucket.user_id
+      - SELECT uuid AS id, * FROM manager_workoutsession WHERE user_id = bucket.user_id
+      - SELECT * FROM measurements_category WHERE user_id = bucket.user_id
+
+#      - select * from ivm_nutrition_nutritionplan as nutrition_nutritionplan where user_id = bucket.user_id
+#      - select * from ivm_nutrition_meal as nutrition_meal where user_id = bucket.user_id
+#      - select * from ivm_nutrition_mealitem as nutrition_mealitem where user_id = bucket.user_id
+#      - select * from ivm_nutrition_logitem as nutrition_logitem where user_id = bucket.user_id
+  # "too many buckets" errors
+ # meal_item_ingredients: # note: we are restricted by <=1000 distinct ingredient_id values here
+ #   parameters: select ingredient_id as ingredient_id FROM ivm_nutrition_mealitem WHERE user_id = token_parameters.user_id
+ #   data:
+ #     - select * from nutrition_ingredient WHERE ingredient_id = bucket.ingredient_id
+ #     - select * from nutrition_image WHERE ingredient_id = bucket.ingredient_id
+ # log_item_ingredients:
+ #   parameters: select ingredient_id as ingredient_id FROM ivm_nutrition_logitem WHERE user_id = token_parameters.user_id
+ #   data:
+ #     - select * from nutrition_ingredient WHERE ingredient_id = bucket.ingredient_id
+ #     - select * from nutrition_image WHERE ingredient_id = bucket.ingredient_id

@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=../schema/schema.json
+
+# Note that this example uses YAML custom tags for environment variable substitution.
+# Using `!env [variable name]` will substitute the value of the environment variable named
+# [variable name].
+#
+# Only environment variables with names starting with `PS_` can be substituted.
+#
+# e.g. With the environment variable `export PS_MONGO_URI=mongodb://localhost:27017`
+# and YAML code:
+#  uri: !env PS_MONGO_URI
+# The YAML will resolve to:
+#  uri: mongodb://localhost:27017
+#
+# If using VS Code see the `.vscode/settings.json` definitions which define custom tags.
+
+# migrations:
+#   # Migrations run automatically by default.
+#   # Setting this to true will skip automatic migrations.
+#   # Migrations can be triggered externally by altering the container `command`.
+#   disable_auto_migration: true
+
+# Settings for telemetry reporting
+# See https://docs.powersync.com/self-hosting/telemetry
+telemetry:
+  # Opt out of reporting anonymized usage metrics to PowerSync telemetry service
+  disable_telemetry_sharing: false
+
+# Settings for source database replication
+replication:
+  # Specify database connection details
+  # Note only 1 connection is currently supported
+  # Multiple connection support is on the roadmap
+  connections:
+    - type: postgresql
+      # The PowerSync server container can access the Postgres DB via the DB's service name.
+      # In this case the hostname is db
+
+      # The connection URI or individual parameters can be specified.
+      # Individual params take precedence over URI params
+      uri: !env PS_PG_URI
+
+      # Or use individual params
+
+      # hostname: db # From the Docker Compose service name
+      # port: 5432
+      # database: postgres
+      # username: postgres
+      # password: mypassword
+
+      # SSL settings
+      sslmode: disable # 'verify-full' (default) or 'verify-ca' or 'disable'
+      # 'disable' is OK for local/private networks, not for public networks
+
+
+# Connection settings for sync bucket storage
+storage:
+  type: mongodb
+  uri: !env PS_MONGO_URI
+
+# The port which the PowerSync API server will listen on
+port: !env PS_PORT
+
+# Specify sync rules
+sync_rules:
+  path: sync_rules.yaml
+
+# Client (application end user) authentication settings
+client_auth:
+  # Enable this if using Supabase Auth
+  # supabase: true
+  allow_local_jwks: true
+
+  # JWKS URIs can be specified here
+  jwks_uri: !env PS_JWKS_URL
+
+  # JWKS audience
+  audience: ["powersync-dev", "powersync"]

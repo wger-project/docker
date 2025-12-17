@@ -1,4 +1,5 @@
 /config/Caddyfile
 /docker-compose.override.yml
 /dev-postgres/.env
+/dev-postgres-powersync/.env
 /dev/.env

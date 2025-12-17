@@ -1,0 +1,52 @@
+services:
+  powersync:
+    depends_on:
+      mongo-rs-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    image: journeyapps/powersync-service:latest
+    # The unified service runs an API server and replication worker in the same container.
+    # These services can be executed in different containers by using individual entry commands e.g.
+    # Start only the API server with
+    #   command: ['start', '-r', 'api']
+    # Start only the replication worker with
+    #   command: ['start', '-r', 'sync']
+
+    # Migations occur automatically by default. Default migrations can be disabled in `powersync.yaml`:
+    #  migrations:
+    #   disable_auto_migration: true
+    #
+    # Service migrations can be manually triggered by starting a container with the
+    # following command:
+    #     command: ['migrate', 'up']
+    # Note that this container must finish executing before starting the sync or unified container.
+    command: ["start", "-r", "unified"]
+    volumes:
+      # Mounts the specified config folder to the container
+      # This folder should contain `powersync.yaml and sync_rules.yaml
+      - ../config-powersync:/config
+    env_file:
+      - ../../config/prod.env
+      - ../../config/dev.env
+    environment:
+      # This is the path (inside the container) to the YAML config file
+      # Alternatively the config path can be specified in the command
+      # e.g:
+      #   command: ['start', '-r', 'unified', '-c', '/config/powersync.yaml']
+      #
+      # The config file can also be specified in Base 64 encoding
+      # e.g.: Via an environment variable
+      #   POWERSYNC_CONFIG_B64: [base64 encoded content]
+      # or e.g.: Via a command line parameter
+      #    command: ['start', '-r', 'unified', '-c64', '[base64 encoded content]']
+      POWERSYNC_CONFIG_PATH: /config/powersync.yaml
+
+      # Sync rules can be specified as base 64 encoded YAML
+      # e.g: Via an environment variable
+      # POWERSYNC_SYNC_RULES_B64: "[base64 encoded sync rules]"
+      # or e.g.: Via a command line parameter
+      #     command: ['start', '-r', 'unified', '-sync64', '[base64 encoded content]']
+      PS_JWKS_URL: http://web:8000/api/v2/powersync-keys
+
+    ports:
+      - 8080:8080
