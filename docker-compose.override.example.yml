@@ -1,20 +1,21 @@
 # Example override file. Copy as docker-compose.override.yml and edit as needed
 
+# Please note that when defining lists here, they will be merged with the
+# lists in the base file. If you want to completely override a list, instead
+# you need to use the special syntax "!override" and "!reset".
+# For more details: https://docs.docker.com/reference/compose-file/merge/
 services:
 
   web:
     env_file:
-      - ./config/prod.env
       - ./config/wger-local.env # Only add the variables that you have changed
 
   celery_worker:
     env_file:
-      - ./config/prod.env
       - ./config/wger-local.env
 
   celery_beat:
     env_file:
-      - ./config/prod.env
       - ./config/wger-local.env
 
   #
@@ -48,7 +49,7 @@ services:
 # service needs to stay there. Here we simply remove any exposed ports
 
 #  caddy:
-#    image: caddy:latest
+#    image: docker.io/caddy:latest
 #    depends_on:
 #      - web
 #    ports:
