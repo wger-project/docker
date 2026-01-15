@@ -28,10 +28,12 @@
 
 #your.domain.example.com {
 localhost {
+    tls your@email.address
     log wger
 
     encode
 
+    # or "reverse_proxy anubis:3000 {" if you are using Anubis
     reverse_proxy web:8000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
@@ -41,6 +43,11 @@ localhost {
 
     handle /static/* {
         root * /wger
+
+        # Files in the static folder are preprocessed by collectstatic and have a hash
+        # in their names, so we can cache longer
+        header Cache-Control "public, max-age=31536000, immutable"
+        header Vary "Accept-Encoding"
         file_server
     }
 
