@@ -43,6 +43,11 @@ localhost {
 
     handle /static/* {
         root * /wger
+
+        # Files in the static folder are preprocessed by collectstatic and have a hash
+        # in their names, so we can cache longer
+        header Cache-Control "public, max-age=31536000, immutable"
+        header Vary "Accept-Encoding"
         file_server
     }
 
