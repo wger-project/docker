@@ -25,7 +25,9 @@ jobs:
 
       - name: Validate nginx configuration syntax
         run: |
-          docker run --rm -v ${{ github.workspace }}/config/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+          docker run --rm \
+            --add-host=web:127.0.0.1 \
+            --volume ${{ github.workspace }}/config/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
             nginx:alpine nginx -t
 
   test-configuration:
