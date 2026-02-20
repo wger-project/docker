@@ -8,17 +8,10 @@ services:
       - 27017:27017
     volumes:
       - mongo_storage:/data/db
-
-  # Initializes the MongoDB replica set. This service will not usually be actively running
-  mongo-rs-init:
-    image: mongo:8
-    depends_on:
-      - mongo
-    restart: on-failure
-    entrypoint:
-      - bash
-      - -c
-      - 'mongosh --host mongo:27017 --eval ''try{rs.status().ok && quit(0)} catch {} rs.initiate({_id: "rs0", version: 1, members: [{ _id: 0, host : "mongo:27017" }]})'''
+    healthcheck:
+      test: "test $$(mongosh --quiet --eval 'try { rs.status().ok } catch { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongo:27017\"}]}).ok }') -eq 1"
+      interval: 10s
+      start_period: 5s
 
 volumes:
   mongo_storage:

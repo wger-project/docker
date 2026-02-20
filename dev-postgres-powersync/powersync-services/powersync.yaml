@@ -1,7 +1,7 @@
 services:
   powersync:
     depends_on:
-      mongo-rs-init:
+      mongo:
         condition: service_completed_successfully
     restart: unless-stopped
     image: journeyapps/powersync-service:latest
