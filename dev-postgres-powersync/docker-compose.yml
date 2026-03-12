@@ -37,9 +37,7 @@ services:
     restart: unless-stopped
 
   db:
-    build:
-      context: ../postgres
-      dockerfile: Dockerfile
+    image: docker.io/postgres:15-alpine
     environment:
       - POSTGRES_USER=wger
       - POSTGRES_PASSWORD=wger
