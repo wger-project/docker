@@ -25,7 +25,7 @@ services:
       - "8000:8000"
 
   cache:
-    image: redis
+    image: docker.io/redis:latest
     expose:
       - 6379
     healthcheck:

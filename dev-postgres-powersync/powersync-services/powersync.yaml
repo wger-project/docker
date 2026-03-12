@@ -4,7 +4,8 @@ services:
       mongo:
         condition: service_completed_successfully
     restart: unless-stopped
-    image: journeyapps/powersync-service:latest
+
+    image: docker.io/journeyapps/powersync-service:latest
     # The unified service runs an API server and replication worker in the same container.
     # These services can be executed in different containers by using individual entry commands e.g.
     # Start only the API server with
@@ -21,13 +22,16 @@ services:
     #     command: ['migrate', 'up']
     # Note that this container must finish executing before starting the sync or unified container.
     command: ["start", "-r", "unified"]
+
     volumes:
       # Mounts the specified config folder to the container
       # This folder should contain `powersync.yaml and sync_rules.yaml
       - ../config-powersync:/config
+
     env_file:
       - ../../config/prod.env
       - ../../config/dev.env
+
     environment:
       # This is the path (inside the container) to the YAML config file
       # Alternatively the config path can be specified in the command
