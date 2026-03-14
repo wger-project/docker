@@ -6,12 +6,6 @@ services:
       pull: true
       context: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
       dockerfile: ./extras/docker/development/Dockerfile
-    depends_on:
-      db:
-        condition: service_healthy
-    env_file:
-      - ../config/prod.env
-      - ../config/dev.env
     develop:
       watch:
         - action: sync
@@ -21,6 +15,12 @@ services:
           path: ${WGER_CODEPATH}/pyproject.toml
         - action: rebuild
           path: ${WGER_CODEPATH}/package.json
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ../config/prod.env
+      - ../config/dev.env
     ports:
       - "8000:8000"
 
@@ -45,9 +45,9 @@ services:
     volumes:
       - postgres-dev-data:/var/lib/postgresql/data/
       # automatically import dump
-#      - ../wger-2025-09-09_19-25.dump:/docker-entrypoint-initdb.d/00-init-db.sql:ro
-#      - ../wger-reset-password.sql:/docker-entrypoint-initdb.d/01-reset-pw.sql:ro
-#      - ../wger-cleanup.sql:/docker-entrypoint-initdb.d/02-cleanup.sql:ro
+      #- ../wger-2026-01-15-1410.dump:/docker-entrypoint-initdb.d/00-init-db.sql:ro
+      #- ../wger-reset-password.sql:/docker-entrypoint-initdb.d/01-reset-pw.sql:ro
+      #- ../wger-cleanup.sql:/docker-entrypoint-initdb.d/02-cleanup.sql:ro
     ports:
       - "5432:5432"
     expose:

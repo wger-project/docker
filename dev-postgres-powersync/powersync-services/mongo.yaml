@@ -9,8 +9,15 @@ services:
     volumes:
       - mongo_storage:/data/db
     healthcheck:
-      test: "test $$(mongosh --quiet --eval 'try { rs.status().ok } catch { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongo:27017\"}]}).ok }') -eq 1"
-      interval: 10s
+      test: |
+        test $$(mongosh --quiet --eval "
+        try {
+          rs.status().ok
+        } catch {
+          rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]}).ok
+        }
+        ") -eq 1
+      interval: 60s
       start_period: 5s
 
 volumes:
