@@ -6,6 +6,11 @@
 
 
 bots:
+  # Allow access to the rest API
+  - name: allow-api-v2
+    expression: 'path.startsWith("/api/v2")'
+    action: ALLOW
+
   - # Pathological bots to deny
     # This correlates to data/bots/_deny-pathological.yaml in the source tree
     # https://github.com/TecharoHQ/anubis/blob/main/data/bots/_deny-pathological.yaml
