@@ -4,15 +4,15 @@
 # The service needs to be restarted for changes to take effect.
 # Warning, parameter queries have a limit of 1000 rows (before filtering)!
 
+# For details, see the documentation: https://docs.powersync.com/sync/streams/overview
 config:
   edition: 3
 
-# For details, see the documentation: https://docs.powersync.com/sync/streams/overview
 streams:
+  # Core data, common to all users
   core:
     auto_subscribe: true
     queries:
-      # Translated from "global" bucket definition.
       - SELECT * FROM core_language
       - SELECT * FROM core_license
       - SELECT * FROM core_repetitionunit
@@ -32,6 +32,38 @@ streams:
 
   user_streams:
     auto_subscribe: true
+    with:
+      user_ingredients: |
+        SELECT DISTINCT
+          nutrition_ingredient.id
+        FROM
+          nutrition_ingredient
+        WHERE
+          -- ingredients directly logged by the user
+          nutrition_ingredient.id IN (
+            SELECT
+              nutrition_logitem.ingredient_id
+            FROM
+              nutrition_logitem
+            JOIN
+              nutrition_nutritionplan ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
+            WHERE
+              nutrition_nutritionplan.user_id = auth.user_id()
+            )
+        OR
+          -- ingredients added to nutritional plans
+          nutrition_ingredient.id IN (
+            SELECT
+              nutrition_mealitem.ingredient_id
+            FROM
+              nutrition_mealitem
+            JOIN
+              nutrition_meal ON nutrition_mealitem.meal_id = nutrition_meal.id
+            JOIN
+              nutrition_nutritionplan ON nutrition_meal.plan_id = nutrition_nutritionplan.id
+            WHERE
+              nutrition_nutritionplan.user_id = auth.user_id()
+          )
     queries:
       # Weight
       - "SELECT uuid AS id, * FROM weight_weightentry WHERE user_id = auth.user_id()"
@@ -46,41 +78,18 @@ streams:
       - |
         SELECT 
           measurements_measurement.* 
-          FROM measurements_measurement 
-          INNER JOIN measurements_category 
-            ON measurements_measurement.category_id = measurements_category.id 
-            WHERE measurements_category.user_id = auth.user_id()
+        FROM measurements_measurement 
+        INNER JOIN measurements_category 
+          ON measurements_measurement.category_id = measurements_category.id 
+          WHERE measurements_category.user_id = auth.user_id()
 
       # Nutrition
       # note: we are restricted by <=1000 distinct ingredient_id values here
+      - SELECT * FROM nutrition_ingredient WHERE id IN user_ingredients
       - |
-        SELECT DISTINCT
-            nutrition_ingredient.*
+        SELECT nutrition_image.*
         FROM
-            nutrition_ingredient
-        WHERE
-            -- ingredients directly logged by the user
-            nutrition_ingredient.id IN (
-                SELECT
-                    nutrition_logitem.ingredient_id
-                FROM
-                    nutrition_logitem
-                JOIN
-                    nutrition_nutritionplan ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
-                WHERE
-                    nutrition_nutritionplan.user_id = auth.user_id()
-            )
-            OR
-            -- ingredients added to nutritional plans
-            nutrition_ingredient.id IN (
-                SELECT
-                    nutrition_mealitem.ingredient_id
-                FROM
-                    nutrition_mealitem
-                JOIN
-                    nutrition_meal ON nutrition_mealitem.meal_id = nutrition_meal.id
-                JOIN
-                    nutrition_nutritionplan ON nutrition_meal.plan_id = nutrition_nutritionplan.id
-                WHERE
-                    nutrition_nutritionplan.user_id = auth.user_id()
-            );
+          nutrition_image
+        JOIN
+          nutrition_ingredient ON nutrition_ingredient.id = nutrition_image.ingredient_id
+        WHERE nutrition_ingredient.id IN user_ingredients
