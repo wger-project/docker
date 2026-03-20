@@ -6,7 +6,7 @@
 
 
 bots:
-  # Allow access to the rest API
+  # Explicitly always allow access to the rest API
   - name: allow-api-v2
     expression: 'path.startsWith("/api/v2")'
     action: ALLOW
@@ -17,10 +17,8 @@ bots:
   - import: (data)/bots/_deny-pathological.yaml
   - import: (data)/bots/aggressive-brazilian-scrapers.yaml
 
-  # Aggressively block AI/LLM related bots/agents by default
+  # AI bot policy
   #- import: (data)/meta/ai-block-aggressive.yaml
-
-  # Consider replacing the aggressive AI policy with more selective policies:
   - import: (data)/meta/ai-block-moderate.yaml
   # - import: (data)/meta/ai-block-permissive.yaml
 
@@ -35,6 +33,7 @@ bots:
   #   - Marginalia
   #   - Mojeek
   - import: (data)/crawlers/_allow-good.yaml
+
   # Challenge Firefox AI previews
   - import: (data)/clients/x-firefox-ai.yaml
 
@@ -123,9 +122,8 @@ bots:
       adjust: 10
 
 store:
-  # backend: bbolt
-  # parameters:
-  #  path: /data/anubis.bdb
+  #backend: memory
+  #  parameters: { }
 
   backend: valkey
   parameters:
