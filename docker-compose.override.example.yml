@@ -33,6 +33,9 @@ services:
       TARGET: http://web:8000
       POLICY_FNAME: "/data/cfg/anubis-rules.yml"
       WEBMASTER_EMAIL: "hello@wger.de"
+      USE_REMOTE_ADDRESS: "true"
+
+       # generate with e.g. "openssl rand -hex 32"
       ED25519_PRIVATE_KEY_HEX: "dba7c07331693b7beaeae102765568dd3c35cc1b6b3b23adaeeb5ecee406cc71"
     expose:
       - 3000
