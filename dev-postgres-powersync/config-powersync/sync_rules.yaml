@@ -28,7 +28,6 @@ streams:
       - SELECT * FROM exercises_exercisecategory
       - SELECT * FROM exercises_exerciseimage
       - SELECT * FROM exercises_exercisevideo
-      - SELECT * FROM exercises_variation
 
   user_streams:
     auto_subscribe: true
