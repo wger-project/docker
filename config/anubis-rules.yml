@@ -6,16 +6,19 @@
 
 
 bots:
-  - # Pathological bots to deny
-    # This correlates to data/bots/_deny-pathological.yaml in the source tree
-    # https://github.com/TecharoHQ/anubis/blob/main/data/bots/_deny-pathological.yaml
-    import: (data)/bots/_deny-pathological.yaml
+  # Explicitly always allow access to the rest API
+  - name: allow-api-v2
+    expression: 'path.startsWith("/api/v2")'
+    action: ALLOW
+
+  # Pathological bots to deny
+  # This correlates to data/bots/_deny-pathological.yaml in the source tree
+  # https://github.com/TecharoHQ/anubis/blob/main/data/bots/_deny-pathological.yaml
+  - import: (data)/bots/_deny-pathological.yaml
   - import: (data)/bots/aggressive-brazilian-scrapers.yaml
 
-  # Aggressively block AI/LLM related bots/agents by default
+  # AI bot policy
   #- import: (data)/meta/ai-block-aggressive.yaml
-
-  # Consider replacing the aggressive AI policy with more selective policies:
   - import: (data)/meta/ai-block-moderate.yaml
   # - import: (data)/meta/ai-block-permissive.yaml
 
@@ -30,6 +33,7 @@ bots:
   #   - Marginalia
   #   - Mojeek
   - import: (data)/crawlers/_allow-good.yaml
+
   # Challenge Firefox AI previews
   - import: (data)/clients/x-firefox-ai.yaml
 
@@ -45,29 +49,6 @@ bots:
   #     difficulty: 16  # impossible
   #     report_as: 4    # lie to the operator
   #     algorithm: slow # intentionally waste CPU cycles and time
-
-  # Requires a subscription to Thoth to use, see
-  # https://anubis.techaro.lol/docs/admin/thoth#geoip-based-filtering
-  #- name: countries-with-aggressive-scrapers
-  #  action: WEIGH
-  #  geoip:
-  #    countries:
-  #      - BR
-  #      - CN
-  #  weight:
-  #    adjust: 10
-
-  # Requires a subscription to Thoth to use, see
-  # https://anubis.techaro.lol/docs/admin/thoth#asn-based-filtering
-  #- name: aggressive-asns-without-functional-abuse-contact
-  #  action: WEIGH
-  #  asns:
-  #    match:
-  #      - 13335 # Cloudflare
-  #      - 136907 # Huawei Cloud
-  #      - 45102 # Alibaba Cloud
-  #  weight:
-  #    adjust: 10
 
   # ## System load based checks.
   # # If the system is under high load, add weight.
@@ -141,9 +122,8 @@ bots:
       adjust: 10
 
 store:
-  # backend: bbolt
-  # parameters:
-  #  path: /data/anubis.bdb
+  #backend: memory
+  #  parameters: { }
 
   backend: valkey
   parameters:

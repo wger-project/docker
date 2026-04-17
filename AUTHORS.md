@@ -2,13 +2,14 @@
 
 Thank you all for contributing to the project, you are true heroes! 🫶
 
-*Generated on 2026-01-18*
+*Generated on 2026-04-10*
 
 ---
 
 ## Contributors
 
 - Roland Geider - [https://github.com/rolandgeider](https://github.com/rolandgeider)
+- Kaloian Kozlev - [https://github.com/kbkozlev](https://github.com/kbkozlev)
 - GhostInTheNN - [https://github.com/GhostInTheNN](https://github.com/GhostInTheNN)
 - Benjamin Porter - [https://github.com/FreedomBen](https://github.com/FreedomBen)
 - Peter Dave Hello - [https://github.com/PeterDaveHello](https://github.com/PeterDaveHello)
