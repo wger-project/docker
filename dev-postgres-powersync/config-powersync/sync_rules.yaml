@@ -68,11 +68,10 @@ streams:
       - "SELECT uuid AS id, * FROM weight_weightentry WHERE user_id = auth.user_id()"
 
       # Routines
-      - "SELECT uuid AS id, * FROM manager_workoutlog WHERE user_id = auth.user_id()"
-      - "SELECT uuid AS id, * FROM manager_workoutsession WHERE user_id = auth.user_id()"
+      - "SELECT * FROM manager_workoutlog WHERE user_id = auth.user_id()"
+      - "SELECT * FROM manager_workoutsession WHERE user_id = auth.user_id()"
 
       # Measurements
-      #- "SELECT uuid AS id, * FROM measurements_category WHERE user_id = auth.user_id()"
       - "SELECT * FROM measurements_category WHERE user_id = auth.user_id()"
       - |
         SELECT 
