@@ -13,7 +13,7 @@ services:
     # Start only the replication worker with
     #   command: ['start', '-r', 'sync']
 
-    # Migations occur automatically by default. Default migrations can be disabled in `powersync.yaml`:
+    # Migrations occur automatically by default. Default migrations can be disabled in `powersync.yaml`:
     #  migrations:
     #   disable_auto_migration: true
     #
@@ -53,4 +53,4 @@ services:
       PS_JWKS_URL: http://web:8000/api/v2/powersync-keys
 
     ports:
-      - 8080:8080
+      - "8080:8080"
