@@ -29,6 +29,14 @@ streams:
       - SELECT * FROM exercises_exerciseimage
       - SELECT * FROM exercises_exercisevideo
 
+  #
+  # IMPORTANT:
+  #
+  # `CAST(user_id AS TEXT)` is required because `auth.user_id()` comes
+  # from the JWT `sub` claim as a string. Without the cast, PowerSync
+  # stores the bucket key as integer but announces it to the client as
+  # string — the client then never finds any ops in the "empty" bucket.
+
   user_streams:
     auto_subscribe: true
     with:
@@ -47,7 +55,7 @@ streams:
             JOIN
               nutrition_nutritionplan ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
             WHERE
-              nutrition_nutritionplan.user_id = auth.user_id()
+              CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
             )
         OR
           -- ingredients added to nutritional plans
@@ -61,25 +69,25 @@ streams:
             JOIN
               nutrition_nutritionplan ON nutrition_meal.plan_id = nutrition_nutritionplan.id
             WHERE
-              nutrition_nutritionplan.user_id = auth.user_id()
+              CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
           )
     queries:
       # Weight
-      - "SELECT uuid AS id, * FROM weight_weightentry WHERE user_id = auth.user_id()"
+      - "SELECT uuid AS id, weight, date, user_id FROM weight_weightentry WHERE CAST(user_id AS TEXT) = auth.user_id()"
 
       # Routines
-      - "SELECT * FROM manager_workoutlog WHERE user_id = auth.user_id()"
-      - "SELECT * FROM manager_workoutsession WHERE user_id = auth.user_id()"
+      - "SELECT * FROM manager_workoutlog WHERE CAST(user_id AS TEXT) = auth.user_id()"
+      - "SELECT * FROM manager_workoutsession WHERE CAST(user_id AS TEXT) = auth.user_id()"
 
       # Measurements
-      - "SELECT * FROM measurements_category WHERE user_id = auth.user_id()"
+      - "SELECT * FROM measurements_category WHERE CAST(user_id AS TEXT) = auth.user_id()"
       - |
-        SELECT 
-          measurements_measurement.* 
-        FROM measurements_measurement 
-        INNER JOIN measurements_category 
-          ON measurements_measurement.category_id = measurements_category.id 
-          WHERE measurements_category.user_id = auth.user_id()
+        SELECT
+          measurements_measurement.*
+        FROM measurements_measurement
+        INNER JOIN measurements_category
+          ON measurements_measurement.category_id = measurements_category.id
+          WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
 
       # Nutrition
       # note: we are restricted by <=1000 distinct ingredient_id values here
@@ -91,3 +99,4 @@ streams:
         JOIN
           nutrition_ingredient ON nutrition_ingredient.id = nutrition_image.ingredient_id
         WHERE nutrition_ingredient.id IN user_ingredients
+
