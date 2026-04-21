@@ -22,16 +22,8 @@ services:
     ports:
       - "8000:8000"
 
+    # So this never exists
     command: tail -f /dev/null
 
-  cache:
-    image: redis
-    expose:
-      - 6379
-    healthcheck:
-      test: redis-cli ping
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
+include:
+  - path: ../services/redis.yaml

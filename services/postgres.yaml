@@ -1,0 +1,26 @@
+services:
+  db:
+    image: docker.io/postgres:15-alpine
+    environment:
+      - POSTGRES_USER=wger
+      - POSTGRES_PASSWORD=wger
+      - POSTGRES_DB=wger
+      - TZ=Europe/Berlin
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    # "-c", "log_statement=all", "-c", "log_min_error_statement=DEBUG1"
+    command: [ "postgres", "-c", "wal_level=logical" ]
+    healthcheck:
+      test: pg_isready -U wger
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped

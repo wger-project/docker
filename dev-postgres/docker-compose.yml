@@ -15,45 +15,35 @@ services:
           path: ${WGER_CODEPATH}/pyproject.toml
         - action: rebuild
           path: ${WGER_CODEPATH}/package.json
+    depends_on:
+      db:
+        condition: service_healthy
     env_file:
       - ../config/prod.env
       - ../config/dev.env
     ports:
       - "8000:8000"
 
-    command: tail -f /dev/null
-
-  cache:
-    image: redis
-    expose:
-      - 6379
-    healthcheck:
-      test: redis-cli ping
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
+  # No need to persist the data in dev
+#  cache:
+#    volumes: !override
+#      - ../config/redis.conf:/usr/local/etc/redis/redis.conf
 
   db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_USER=wger
-      - POSTGRES_PASSWORD=wger
-      - POSTGRES_DB=wger
-    volumes:
-      - postgres-data-dev:/var/lib/postgresql/data/
+    volumes: !override
+      - postgres-dev-data:/var/lib/postgresql/data/
+      - ./initdb:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
-    expose:
-      - 5432
-    healthcheck:
-      test: pg_isready -U wger
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
 
 volumes:
-  postgres-data-dev:
+  postgres-dev-data:
+
+networks:
+  default:
+    name: wger-dev-network
+
+include:
+  - path: ../services/postgres.yaml
+  - path: ../services/powersync.yaml
+  - path: ../services/redis.yaml

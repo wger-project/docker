@@ -52,49 +52,17 @@ services:
     restart: unless-stopped
 
   db:
-    image: docker.io/postgres:15-alpine
     environment:
-      - POSTGRES_USER=wger
-      - POSTGRES_PASSWORD=wger
-      - POSTGRES_DB=wger
       - TZ=Europe/Berlin
-    volumes:
-      - postgres-data:/var/lib/postgresql/data/
-    expose:
-      - 5432
     logging:
       driver: json-file
       options:
         max-size: 5m
         max-file: 5
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "wger" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
 
   cache:
-    image: docker.io/redis
-    expose:
-      - 6379
-    logging:
-      driver: json-file
-      options:
-        max-size: 5m
-        max-file: 5
     volumes:
-      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
       - redis-data:/data
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-    healthcheck:
-      test: redis-cli ping
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
 
     # You probably want to limit the memory usage of the cache, otherwise it might
     # hog all the available memory. Remove or change according to your needs.
@@ -156,3 +124,7 @@ volumes:
 networks:
   default:
     name: wger_network
+
+include:
+  - path: ./services/postgres.yaml
+  - path: ./services/powersync.yaml

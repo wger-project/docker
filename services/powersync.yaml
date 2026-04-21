@@ -25,13 +25,16 @@ services:
     command: ["start", "-r", "unified"]
 
     volumes:
-      # Mounts the specified config folder to the container
-      # This folder should contain `powersync.yaml and sync_rules.yaml
-      - ../config-powersync:/config:ro
+      # Mounts the PowerSync config folder (powersync.yaml + sync_rules.yaml).
+      # Paths in an `include:`d file are resolved relative to *this* file,
+      # not to the including docker-compose.yml. Production setups that want
+      # their own config can override this mount via `volumes: !override`
+      # in their compose file.
+      - ./config-powersync:/config:ro
 
     env_file:
-      - ../../config/prod.env
-      - ../../config/dev.env
+      - ../config/prod.env
+      - ../config/dev.env
 
     # Tip: to run wger Django and Postgres locally on the host (instead of
     # in the `web` / `db` containers) while keeping PowerSync containerised,

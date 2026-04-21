@@ -1,0 +1,21 @@
+services:
+  cache:
+    image: docker.io/redis
+    expose:
+      - 6379
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 5
+    volumes:
+      - ../config/redis.conf:/usr/local/etc/redis/redis.conf
+#      - redis-data:/data
+    command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
