@@ -1,11 +1,12 @@
 services:
   powersync:
     depends_on:
-      mongo:
+      db:
         condition: service_completed_successfully
     restart: unless-stopped
 
     image: docker.io/journeyapps/powersync-service:latest
+
     # The unified service runs an API server and replication worker in the same container.
     # These services can be executed in different containers by using individual entry commands e.g.
     # Start only the API server with
@@ -26,11 +27,26 @@ services:
     volumes:
       # Mounts the specified config folder to the container
       # This folder should contain `powersync.yaml and sync_rules.yaml
-      - ../config-powersync:/config
+      - ../config-powersync:/config:ro
 
     env_file:
       - ../../config/prod.env
       - ../../config/dev.env
+
+    # Tip: to run wger Django and Postgres locally on the host (instead of
+    # in the `web` / `db` containers) while keeping PowerSync containerised,
+    # override the URLs in a docker-compose.override.yml so they reach back
+    # to the host:
+    #
+    #   services:
+    #     powersync:
+    #       extra_hosts:
+    #         # Linux needs this, macOS/Windows work out of the box
+    #         - "host.docker.internal:host-gateway"
+    #       environment:
+    #         PS_PG_URI: postgres://wger:wger@host.docker.internal:5432/wger
+    #         PS_JWKS_URL: http://host.docker.internal:8000/api/v2/powersync-keys
+    #
 
     environment:
       # This is the path (inside the container) to the YAML config file

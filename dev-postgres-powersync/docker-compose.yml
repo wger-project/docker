@@ -70,5 +70,4 @@ networks:
     name: wger-dev-network
 
 include:
-  - path: powersync-services/mongo.yaml
   - path: powersync-services/powersync.yaml
