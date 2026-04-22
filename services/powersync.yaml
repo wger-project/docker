@@ -58,3 +58,7 @@ services:
 
     ports:
       - "8080:8080"
+
+    # Expose prometheus metrics
+    expose:
+      - 9090

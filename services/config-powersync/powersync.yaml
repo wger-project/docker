@@ -25,6 +25,9 @@
 telemetry:
   disable_telemetry_sharing: false
 
+  # Expose prometheus metrics on this port
+  prometheus_port: 9090
+
 # Settings for source database replication
 replication:
   # Specify database connection details
