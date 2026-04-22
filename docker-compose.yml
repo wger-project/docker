@@ -33,10 +33,18 @@ services:
       retries: 5
     restart: unless-stopped
 
+  powersync:
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
   nginx:
     image: docker.io/nginx:stable
     depends_on:
       - web
+      - powersync
     volumes:
       - ./config/nginx.conf:/etc/nginx/conf.d/default.conf
       - static:/wger/static:ro
@@ -52,6 +60,7 @@ services:
     restart: unless-stopped
 
   db:
+    shm_size: 256mb
     environment:
       - TZ=Europe/Berlin
     logging:
@@ -128,3 +137,4 @@ networks:
 include:
   - path: ./services/postgres.yaml
   - path: ./services/powersync.yaml
+  - path: ./services/redis.yaml
