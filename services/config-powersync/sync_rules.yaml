@@ -76,6 +76,7 @@ streams:
       - "SELECT uuid AS id, weight, date, user_id FROM weight_weightentry WHERE CAST(user_id AS TEXT) = auth.user_id()"
 
       # Routines
+      - "SELECT * FROM manager_routine WHERE CAST(user_id AS TEXT) = auth.user_id() AND is_template = FALSE"
       - "SELECT * FROM manager_workoutlog WHERE CAST(user_id AS TEXT) = auth.user_id()"
       - "SELECT * FROM manager_workoutsession WHERE CAST(user_id AS TEXT) = auth.user_id()"
 
@@ -91,6 +92,7 @@ streams:
 
       # Nutrition
       # note: we are restricted by <=1000 distinct ingredient_id values here
+      - "SELECT * FROM nutrition_nutritionplan WHERE CAST(user_id AS TEXT) = auth.user_id()"
       - SELECT * FROM nutrition_ingredient WHERE id IN user_ingredients
       - |
         SELECT nutrition_image.*
