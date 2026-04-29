@@ -54,8 +54,6 @@ storage:
   type: postgresql
   uri: !env PS_STORAGE_PG_URI
   sslmode: disable
-#  type: mongodb
-#  uri: !env PS_STORAGE_MONGO_URI
 
 # The port which the PowerSync API server will listen on
 port: !env PS_PORT
