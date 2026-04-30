@@ -98,7 +98,9 @@ streams:
         SELECT nutrition_image.*
         FROM
           nutrition_image
-        JOIN
-          nutrition_ingredient ON nutrition_ingredient.id = nutrition_image.ingredient_id
-        WHERE nutrition_ingredient.id IN user_ingredients
-
+        WHERE nutrition_image.ingredient_id IN user_ingredients
+      - |
+        SELECT nutrition_ingredientweightunit.*
+        FROM
+          nutrition_ingredientweightunit
+        WHERE nutrition_ingredientweightunit.ingredient_id IN user_ingredients
