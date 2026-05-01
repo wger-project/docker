@@ -118,3 +118,6 @@ streams:
         JOIN nutrition_nutritionplan
           ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
         WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
+
+      # Gallery
+      - "SELECT * FROM gallery_image WHERE CAST(user_id AS TEXT) = auth.user_id()"
