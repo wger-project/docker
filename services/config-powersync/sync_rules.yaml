@@ -104,3 +104,17 @@ streams:
         FROM
           nutrition_ingredientweightunit
         WHERE nutrition_ingredientweightunit.ingredient_id IN user_ingredients
+      - |
+        SELECT
+          nutrition_logitem.uuid AS id,
+          nutrition_logitem.plan_id,
+          nutrition_logitem.meal_id,
+          nutrition_logitem.ingredient_id,
+          nutrition_logitem.weight_unit_id,
+          nutrition_logitem.datetime,
+          nutrition_logitem.amount,
+          nutrition_logitem.comment
+        FROM nutrition_logitem
+        JOIN nutrition_nutritionplan
+          ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
+        WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
