@@ -90,9 +90,49 @@ streams:
           ON measurements_measurement.category_id = measurements_category.id
           WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
 
-      # Nutrition
-      # note: we are restricted by <=1000 distinct ingredient_id values here
-      - "SELECT * FROM nutrition_nutritionplan WHERE CAST(user_id AS TEXT) = auth.user_id()"
+      # Nutrition (note: we are restricted by <=1000 distinct ingredient_id values here)
+      - |
+        SELECT
+          nutrition_nutritionplan.uuid AS id,
+          nutrition_nutritionplan.user_id,
+          nutrition_nutritionplan.creation_date,
+          nutrition_nutritionplan.start,
+          nutrition_nutritionplan.end,
+          nutrition_nutritionplan.description,
+          nutrition_nutritionplan.only_logging,
+          nutrition_nutritionplan.goal_energy,
+          nutrition_nutritionplan.goal_protein,
+          nutrition_nutritionplan.goal_carbohydrates,
+          nutrition_nutritionplan.goal_fiber,
+          nutrition_nutritionplan.goal_fat,
+          nutrition_nutritionplan.has_goal_calories
+        FROM nutrition_nutritionplan
+        WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
+      - |
+        SELECT
+          nutrition_meal.uuid AS id,
+          nutrition_nutritionplan.uuid AS plan_id,
+          nutrition_meal.order,
+          nutrition_meal.time,
+          nutrition_meal.name
+        FROM nutrition_meal
+        JOIN nutrition_nutritionplan
+          ON nutrition_meal.plan_id = nutrition_nutritionplan.id
+        WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
+      - |
+        SELECT
+          nutrition_mealitem.uuid AS id,
+          nutrition_meal.uuid AS meal_id,
+          nutrition_mealitem.ingredient_id,
+          nutrition_mealitem.weight_unit_id,
+          nutrition_mealitem.order,
+          nutrition_mealitem.amount
+        FROM nutrition_mealitem
+        JOIN nutrition_meal
+          ON nutrition_mealitem.meal_id = nutrition_meal.id
+        JOIN nutrition_nutritionplan
+          ON nutrition_meal.plan_id = nutrition_nutritionplan.id
+        WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
       - SELECT * FROM nutrition_ingredient WHERE id IN user_ingredients
       - |
         SELECT nutrition_image.*
@@ -107,8 +147,8 @@ streams:
       - |
         SELECT
           nutrition_logitem.uuid AS id,
-          nutrition_logitem.plan_id,
-          nutrition_logitem.meal_id,
+          nutrition_nutritionplan.uuid AS plan_id,
+          nutrition_meal.uuid AS meal_id,
           nutrition_logitem.ingredient_id,
           nutrition_logitem.weight_unit_id,
           nutrition_logitem.datetime,
@@ -117,6 +157,8 @@ streams:
         FROM nutrition_logitem
         JOIN nutrition_nutritionplan
           ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
+        LEFT JOIN nutrition_meal
+          ON nutrition_logitem.meal_id = nutrition_meal.id
         WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
 
       # Gallery
