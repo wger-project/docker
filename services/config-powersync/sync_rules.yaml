@@ -73,60 +73,32 @@ streams:
           )
     queries:
       # Weight
-      - "SELECT uuid AS id, weight, date, user_id FROM weight_weightentry WHERE CAST(user_id AS TEXT) = auth.user_id()"
+      - SELECT uuid AS id, weight, date, user_id FROM weight_weightentry WHERE CAST(user_id AS TEXT) = auth.user_id()
 
       # Routines
-      - "SELECT * FROM manager_routine WHERE CAST(user_id AS TEXT) = auth.user_id() AND is_template = FALSE"
-      - "SELECT * FROM manager_workoutlog WHERE CAST(user_id AS TEXT) = auth.user_id()"
-      - "SELECT * FROM manager_workoutsession WHERE CAST(user_id AS TEXT) = auth.user_id()"
+      - SELECT * FROM manager_routine WHERE CAST(user_id AS TEXT) = auth.user_id() AND is_template = FALSE
+      - SELECT * FROM manager_workoutlog WHERE CAST(user_id AS TEXT) = auth.user_id()
+      - SELECT * FROM manager_workoutsession WHERE CAST(user_id AS TEXT) = auth.user_id()
 
       # Measurements
-      - "SELECT * FROM measurements_category WHERE CAST(user_id AS TEXT) = auth.user_id()"
+      - SELECT * FROM measurements_category WHERE CAST(user_id AS TEXT) = auth.user_id()
       - |
-        SELECT
-          measurements_measurement.*
+        SELECT measurements_measurement.*
         FROM measurements_measurement
         INNER JOIN measurements_category
           ON measurements_measurement.category_id = measurements_category.id
-          WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
+        WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
 
       # Nutrition (note: we are restricted by <=1000 distinct ingredient_id values here)
+      - SELECT * FROM nutrition_nutritionplan WHERE CAST(user_id AS TEXT) = auth.user_id()
       - |
-        SELECT
-          nutrition_nutritionplan.uuid AS id,
-          nutrition_nutritionplan.user_id,
-          nutrition_nutritionplan.creation_date,
-          nutrition_nutritionplan.start,
-          nutrition_nutritionplan.end,
-          nutrition_nutritionplan.description,
-          nutrition_nutritionplan.only_logging,
-          nutrition_nutritionplan.goal_energy,
-          nutrition_nutritionplan.goal_protein,
-          nutrition_nutritionplan.goal_carbohydrates,
-          nutrition_nutritionplan.goal_fiber,
-          nutrition_nutritionplan.goal_fat,
-          nutrition_nutritionplan.has_goal_calories
-        FROM nutrition_nutritionplan
-        WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
-      - |
-        SELECT
-          nutrition_meal.uuid AS id,
-          nutrition_nutritionplan.uuid AS plan_id,
-          nutrition_meal.order,
-          nutrition_meal.time,
-          nutrition_meal.name
+        SELECT nutrition_meal.*
         FROM nutrition_meal
         JOIN nutrition_nutritionplan
           ON nutrition_meal.plan_id = nutrition_nutritionplan.id
         WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
       - |
-        SELECT
-          nutrition_mealitem.uuid AS id,
-          nutrition_meal.uuid AS meal_id,
-          nutrition_mealitem.ingredient_id,
-          nutrition_mealitem.weight_unit_id,
-          nutrition_mealitem.order,
-          nutrition_mealitem.amount
+        SELECT nutrition_mealitem.*
         FROM nutrition_mealitem
         JOIN nutrition_meal
           ON nutrition_mealitem.meal_id = nutrition_meal.id
@@ -145,21 +117,11 @@ streams:
           nutrition_ingredientweightunit
         WHERE nutrition_ingredientweightunit.ingredient_id IN user_ingredients
       - |
-        SELECT
-          nutrition_logitem.uuid AS id,
-          nutrition_nutritionplan.uuid AS plan_id,
-          nutrition_meal.uuid AS meal_id,
-          nutrition_logitem.ingredient_id,
-          nutrition_logitem.weight_unit_id,
-          nutrition_logitem.datetime,
-          nutrition_logitem.amount,
-          nutrition_logitem.comment
+        SELECT nutrition_logitem.*
         FROM nutrition_logitem
         JOIN nutrition_nutritionplan
           ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
-        LEFT JOIN nutrition_meal
-          ON nutrition_logitem.meal_id = nutrition_meal.id
         WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
 
       # Gallery
-      - "SELECT * FROM gallery_image WHERE CAST(user_id AS TEXT) = auth.user_id()"
+      - SELECT * FROM gallery_image WHERE CAST(user_id AS TEXT) = auth.user_id()
