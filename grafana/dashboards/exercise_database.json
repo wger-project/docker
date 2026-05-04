@@ -1,0 +1,491 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "uid": "wger-exercise-database",
+  "title": "Exercise database",
+  "description": "Statistics about the exercise database: counts, coverage, distributions, growth.",
+  "tags": ["wger", "exercises"],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5m",
+  "time": {
+    "from": "now-1y",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "weekStart": "",
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "PostgreSQL",
+          "value": "PostgreSQL"
+        },
+        "includeAll": false,
+        "name": "datasource",
+        "options": [],
+        "query": "postgres",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Exercises",
+      "datasource": {
+        "type": "postgres",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS value FROM exercises_exercise;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Translations",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS value FROM exercises_translation;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Images",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS value FROM exercises_exerciseimage;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Videos",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS value FROM exercises_exercisevideo;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Exercises without images",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "description": "Exercises that have no associated image yet.",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS value FROM exercises_exercise e WHERE NOT EXISTS (SELECT 1 FROM exercises_exerciseimage i WHERE i.exercise_id = e.id);",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Exercises without videos",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "textMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS value FROM exercises_exercise e WHERE NOT EXISTS (SELECT 1 FROM exercises_exercisevideo v WHERE v.exercise_id = e.id);",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "barchart",
+      "title": "Exercises per category",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "xTickLabelRotation": 0,
+        "legend": { "displayMode": "hidden", "placement": "bottom", "showLegend": false }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT c.name AS category, COUNT(e.id) AS exercises FROM exercises_exercisecategory c LEFT JOIN exercises_exercise e ON e.category_id = c.id GROUP BY c.name ORDER BY exercises DESC;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "barchart",
+      "title": "Translations per language",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "description": "How many translations exist per language. Languages without any translation are listed with 0.",
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "legend": { "displayMode": "hidden", "showLegend": false }
+      },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT l.full_name AS language, COUNT(t.id) AS translations FROM core_language l LEFT JOIN exercises_translation t ON t.language_id = l.id GROUP BY l.full_name ORDER BY translations DESC;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Exercise submissions per month",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "description": "New exercises created per month, based on the exercise's `created` timestamp.",
+      "options": {
+        "legend": { "displayMode": "list", "showLegend": true },
+        "tooltip": { "mode": "single" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80
+          },
+          "color": { "mode": "fixed", "fixedColor": "blue" }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('month', created) AS time, COUNT(*) AS \"new exercises\" FROM exercises_exercise WHERE $__timeFilter(created) GROUP BY 1 ORDER BY 1;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Translation submissions per month",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "description": "New translations created per month.",
+      "options": {
+        "legend": { "displayMode": "list", "showLegend": true },
+        "tooltip": { "mode": "single" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80
+          },
+          "color": { "mode": "fixed", "fixedColor": "green" }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('month', created) AS time, COUNT(*) AS \"new translations\" FROM exercises_translation WHERE $__timeFilter(created) GROUP BY 1 ORDER BY 1;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "type": "piechart",
+      "title": "License distribution (translations)",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 20 },
+      "options": {
+        "displayLabels": ["percent"],
+        "legend": { "displayMode": "list", "placement": "right", "showLegend": true },
+        "pieType": "donut",
+        "tooltip": { "mode": "single" }
+      },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT l.short_name AS license, COUNT(t.id) AS translations FROM core_license l JOIN exercises_translation t ON t.license_id = l.id GROUP BY l.short_name ORDER BY translations DESC;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "type": "table",
+      "title": "Top license authors (translations)",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 20 },
+      "description": "Most prolific license authors across translations. Empty/blank authors are excluded.",
+      "options": {
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto" } }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT license_author AS author, COUNT(*) AS translations FROM exercises_translation WHERE license_author IS NOT NULL AND TRIM(license_author) <> '' GROUP BY license_author ORDER BY translations DESC LIMIT 20;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "type": "barchart",
+      "title": "Equipment coverage",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 20 },
+      "description": "How many exercises use each piece of equipment.",
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "legend": { "displayMode": "hidden", "showLegend": false }
+      },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT eq.name AS equipment, COUNT(DISTINCT eq_e.exercise_id) AS exercises FROM exercises_equipment eq LEFT JOIN exercises_exercise_equipment eq_e ON eq_e.equipment_id = eq.id GROUP BY eq.name ORDER BY exercises DESC;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "type": "barchart",
+      "title": "Primary muscle coverage",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "description": "How many exercises target each primary muscle.",
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "legend": { "displayMode": "hidden", "showLegend": false }
+      },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT m.name AS muscle, COUNT(DISTINCT em.exercise_id) AS exercises FROM exercises_muscle m LEFT JOIN exercises_exercise_muscles em ON em.muscle_id = m.id GROUP BY m.name ORDER BY exercises DESC;",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "type": "timeseries",
+      "title": "Deletion log volume per month",
+      "datasource": { "type": "postgres", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "description": "Tombstones recorded per month, broken down by model_type.",
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 70,
+            "stacking": { "mode": "normal", "group": "A" }
+          },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "${datasource}" },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT date_trunc('month', timestamp) AS time, model_type AS metric, COUNT(*) AS value FROM exercises_deletionlog WHERE $__timeFilter(timestamp) GROUP BY 1, model_type ORDER BY 1;",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
