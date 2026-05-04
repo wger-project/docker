@@ -1,7 +1,7 @@
 services:
   prometheus:
     image: prom/prometheus:latest
-    restart: 'no'
+    restart: unless-stopped
     volumes:
       - prometheus_data:/prometheus
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
@@ -23,7 +23,7 @@ services:
       - GF_PROVISIONING_DASHBOARDS_PATH=/etc/grafana/provisioning/dashboards
       - GF_PROVISIONING_DATASOURCES_ENABLE=1
       - GF_PROVISIONING_DATASOURCES_PATH=/etc/grafana/provisioning/datasources
-    restart: 'no'
+    restart: unless-stopped
     volumes:
       - ./provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./provisioning/datasources:/etc/grafana/provisioning/datasources
@@ -39,12 +39,14 @@ services:
       - "3100:3100"
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/tmp/loki
     command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
 
   alloy:
     image: grafana/alloy:latest
     volumes:
-      - ./alloy-config.river:/etc/alloy/config.alloy
+      - ./config.alloy:/etc/alloy/config.alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "9080:9080"
@@ -52,13 +54,13 @@ services:
     command:
       - run
       - /etc/alloy/config.alloy
-    restart:
-      unless-stopped
+    restart: unless-stopped
     depends_on:
-        - loki
+      - loki
 
 volumes:
   prometheus_data:
+  loki_data:
 
 networks:
   default:

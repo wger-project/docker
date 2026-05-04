@@ -28,6 +28,7 @@ query_range:
 limits_config:
   metric_aggregation_enabled: true
   retention_period: 720h # prune logs after 30 days
+  volume_enabled: true   # log volume histogram in Grafana Explore
 
 schema_config:
   configs:
@@ -38,6 +39,14 @@ schema_config:
       index:
         prefix: index_
         period: 24h
+
+compactor:
+  working_directory: /tmp/loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_store: filesystem
 
 pattern_ingester:
   enabled: true

@@ -87,7 +87,7 @@ loki.process "process_logs" {
     stage.logfmt {
         mapping = {
           "level" = "",
-          "timestape" = "ts",
+          "timestamp" = "ts",
           "message" = "msg",
         }
     }
