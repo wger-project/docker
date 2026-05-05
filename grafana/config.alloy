@@ -71,14 +71,117 @@ loki.process "process_logs" {
            request_uri    = "request.uri",
            request_proto  = "request.proto",
            request_host   = "request.host",
+           client_ip      = "request.client_ip",
+         }
+      }
+
+    // Promote low-cardinality fields to labels so LogQL can filter via
+    // the index. `request_uri` stays as parsed metadata only — promoting
+    // it would explode cardinality.
+    stage.labels {
+       values = {
+          level = "",
+          status = "",
+          request_method = "",
+          request_host = "",
+       }
+    }
+
+    // High-cardinality fields go to structured metadata: not indexed as
+    // labels (no stream explosion) but still queryable directly without
+    // re-parsing JSON in every dashboard query.
+    stage.structured_metadata {
+      values = {
+        request_uri = "",
+        client_ip = "",
+      }
+    }
+  }
+
+    // Process nginx JSON access logs.
+    // Field names are flat (request_method, request_uri, ...) and were
+    // chosen in nginx.conf to mirror what the Caddy parser produces, so
+    // dashboards can query both via the same labels.
+    stage.match {
+      selector = "{container=~\".*nginx.*\"}"
+
+      stage.json {
+         expressions = {
+           ts             = "",
+           status         = "",
+           size           = "",
+           duration       = "",
+           request_method = "",
+           request_uri    = "",
+           request_proto  = "",
+           request_host   = "",
+           client_ip      = "",
          }
       }
 
     stage.labels {
        values = {
-          level = "",
+          status = "",
+          request_method = "",
+          request_host = "",
        }
     }
+
+    stage.structured_metadata {
+      values = {
+        request_uri = "",
+        client_ip = "",
+      }
+    }
+  }
+
+    // Process Anubis JSON logs (TecharoHQ/anubis bot detection)
+    stage.match {
+      selector = "{container=~\".*anubis.*\"}"
+
+      // Drop oversized lines. Anubis occasionally logs warnings that embed the
+      // entire upstream response body inside `msg`
+      stage.drop {
+        longer_than         = "4KB"
+        drop_counter_reason = "anubis_oversized"
+      }
+
+      stage.json {
+         expressions = {
+           level           = "",
+           msg             = "",
+           request_host    = "host",
+           request_method  = "method",
+           request_path    = "path",
+           user_agent      = "",
+           x_forwarded_for = "\"x-forwarded-for\"",
+           challenge       = "",
+           rule_name       = "check_result.name",
+           rule_action     = "check_result.rule",
+         }
+      }
+
+      // Low-cardinality fields → labels (indexed)
+      stage.labels {
+         values = {
+            level = "",
+            msg = "",
+            request_host = "",
+            request_method = "",
+            rule_action = "",
+         }
+      }
+
+      // High-cardinality but queryable → structured metadata
+      stage.structured_metadata {
+         values = {
+            request_path = "",
+            user_agent = "",
+            x_forwarded_for = "",
+            challenge = "",
+            rule_name = "",
+         }
+      }
   }
 
   // Parse logs from loki and alloy

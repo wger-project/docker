@@ -29,6 +29,8 @@ limits_config:
   metric_aggregation_enabled: true
   retention_period: 720h # prune logs after 30 days
   volume_enabled: true   # log volume histogram in Grafana Explore
+  ingestion_rate_mb: 16        # default 4 MB/s, raised for occasional spikes
+  ingestion_burst_size_mb: 32  # default 6 MB
 
 schema_config:
   configs:
