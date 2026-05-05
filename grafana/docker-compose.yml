@@ -18,7 +18,6 @@ services:
   grafana:
     image: grafana/grafana:latest
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=adminadmin
       - GF_PROVISIONING_DASHBOARDS_ENABLE=1
       - GF_PROVISIONING_DASHBOARDS_PATH=/etc/grafana/provisioning/dashboards
       - GF_PROVISIONING_DATASOURCES_ENABLE=1
@@ -39,7 +38,7 @@ services:
       - "3100:3100"
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
-      - loki_data:/tmp/loki
+      - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
 
