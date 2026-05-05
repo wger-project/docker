@@ -29,13 +29,11 @@ services:
       - ./dashboards:/var/lib/grafana/dashboards
     ports:
       - "3000:3000"
-#    expose:
-#      - 3000
 
   loki:
     image: grafana/loki:latest
-    ports:
-      - "3100:3100"
+    expose:
+      - 3100
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
       - loki_data:/loki
@@ -47,9 +45,8 @@ services:
     volumes:
       - ./config.alloy:/etc/alloy/config.alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "9080:9080"
-      #- "12345:12345"
+    expose:
+      - 9080
     command:
       - run
       - /etc/alloy/config.alloy
