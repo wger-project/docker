@@ -17,7 +17,7 @@ read the warning in the env file.
 
 For more details, consult the documentation (and the config files):
 
-* production: <https://wger.readthedocs.io/en/latest/production/docker.html>
+* production: <https://wger.readthedocs.io/en/latest/installation/docker.html>
 * development: <https://wger.readthedocs.io/en/latest/development/docker.html>
 
 It is recommended to regularly pull the latest version of the compose file,
