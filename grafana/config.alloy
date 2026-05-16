@@ -1,0 +1,214 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+discovery.docker "docker_containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "docker_containers" {
+  targets = discovery.docker.docker_containers.targets
+
+  // clean up container name
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    replacement   = "$1"
+    target_label  = "container"
+  }
+
+}
+
+loki.source.docker "container_logs" {
+  host          = "unix:///var/run/docker.sock"
+  targets       = discovery.relabel.docker_containers.output // Use relabeled targets
+  forward_to    = [loki.process.process_logs.receiver]       // Forward ALL logs to the main processing block
+  labels        = { "job" = "docker" }                       // Base job label
+  relabel_rules = discovery.relabel.docker_containers.rules  // Apply relabel rules defined above
+}
+
+loki.process "process_logs" {
+  stage.docker {}
+
+  // Python containers
+  stage.match {
+    selector = "{container=~\".*(web|celery_worker|celery_beat).*\"}"
+
+    // Python multiline tracebacks
+    stage.multiline {
+      firstline     = "^level=(INFO|DEBUG|WARNING|ERROR|CRITICAL) ts=\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"
+      max_wait_time = "1s"
+    }
+
+  stage.template {
+    source = "level"
+    template = "{{ ToLower .Value }}"
+  }
+
+    stage.labels {
+       values = {
+          log_type = "python",
+          level = "",
+       }
+    }
+  }
+
+    // Process Caddy JSON Logs
+    stage.match {
+      selector = "{container=~\".*caddy.*\"}"
+
+      stage.json {
+         expressions = {
+           level = "",
+           ts = "",
+           logger = "",
+           msg = "",
+           duration = "",
+           size = "",
+           status = "",
+           request_method = "request.method",
+           request_uri    = "request.uri",
+           request_proto  = "request.proto",
+           request_host   = "request.host",
+           client_ip      = "request.client_ip",
+         }
+      }
+
+    // Promote low-cardinality fields to labels so LogQL can filter via
+    // the index. `request_uri` stays as parsed metadata only — promoting
+    // it would explode cardinality.
+    stage.labels {
+       values = {
+          level = "",
+          status = "",
+          request_method = "",
+          request_host = "",
+       }
+    }
+
+    // High-cardinality fields go to structured metadata: not indexed as
+    // labels (no stream explosion) but still queryable directly without
+    // re-parsing JSON in every dashboard query.
+    stage.structured_metadata {
+      values = {
+        request_uri = "",
+        client_ip = "",
+      }
+    }
+  }
+
+    // Process nginx JSON access logs.
+    // Field names are flat (request_method, request_uri, ...) and were
+    // chosen in nginx.conf to mirror what the Caddy parser produces, so
+    // dashboards can query both via the same labels.
+    stage.match {
+      selector = "{container=~\".*nginx.*\"}"
+
+      stage.json {
+         expressions = {
+           ts             = "",
+           status         = "",
+           size           = "",
+           duration       = "",
+           request_method = "",
+           request_uri    = "",
+           request_proto  = "",
+           request_host   = "",
+           client_ip      = "",
+         }
+      }
+
+    stage.labels {
+       values = {
+          status = "",
+          request_method = "",
+          request_host = "",
+       }
+    }
+
+    stage.structured_metadata {
+      values = {
+        request_uri = "",
+        client_ip = "",
+      }
+    }
+  }
+
+    // Process Anubis JSON logs (TecharoHQ/anubis bot detection)
+    stage.match {
+      selector = "{container=~\".*anubis.*\"}"
+
+      // Drop oversized lines. Anubis occasionally logs warnings that embed the
+      // entire upstream response body inside `msg`
+      stage.drop {
+        longer_than         = "4KB"
+        drop_counter_reason = "anubis_oversized"
+      }
+
+      stage.json {
+         expressions = {
+           level           = "",
+           msg             = "",
+           request_host    = "host",
+           request_method  = "method",
+           request_path    = "path",
+           user_agent      = "",
+           x_forwarded_for = "\"x-forwarded-for\"",
+           challenge       = "",
+           rule_name       = "check_result.name",
+           rule_action     = "check_result.rule",
+         }
+      }
+
+      // Low-cardinality fields → labels (indexed)
+      stage.labels {
+         values = {
+            level = "",
+            msg = "",
+            request_host = "",
+            request_method = "",
+            rule_action = "",
+         }
+      }
+
+      // High-cardinality but queryable → structured metadata
+      stage.structured_metadata {
+         values = {
+            request_path = "",
+            user_agent = "",
+            x_forwarded_for = "",
+            challenge = "",
+            rule_name = "",
+         }
+      }
+  }
+
+  // Parse logs from loki and alloy
+  stage.match {
+    selector = "{ container =~ \".*(loki|alloy).*\" }"
+    stage.logfmt {
+        mapping = {
+          "level" = "",
+          "timestamp" = "ts",
+          "message" = "msg",
+        }
+    }
+
+    stage.labels {
+      values = {
+        level = "",
+      }
+    }
+  }
+
+
+  forward_to = [loki.write.loki_endpoint.receiver]
+} // End loki.process process_logs
+
+
+loki.write "loki_endpoint" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

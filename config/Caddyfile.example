@@ -15,15 +15,18 @@
 
     admin :2019
 
+    # `include http.log.access` matches the access logger of every site
     log access-json {
-        include http.log.access.wger
+        include http.log.access
         output file /var/log/www/access.log
     }
 
-    log access-console {
-        include http.log.access.wger
-    	format console
-    }
+    # Uncomment to also pipe access logs to stdout (JSON), e.g. so Alloy/Loki
+    # can pick them up. Default `format json` is required for the parser.
+    #log access-stdout {
+    #    include http.log.access
+    #    format json
+    #}
 }
 
 #your.domain.example.com {

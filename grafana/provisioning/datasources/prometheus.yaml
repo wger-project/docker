@@ -6,10 +6,11 @@ datasources:
     access: proxy
     url: http://prometheus:9090
     isDefault: true
-    basicAuth: true
-    basicAuthUser: "admin"
-    secureJsonData:
-      basicAuthPassword: "adminadmin"
+    # Uncomment if you enable basic auth on Prometheus (web.yml in compose).
+    #basicAuth: true
+    #basicAuthUser: "admin"
+    #secureJsonData:
+    #  basicAuthPassword: "${PROMETHEUS_ADMIN_PASSWORD}"
     jsonData:
       timeInterval: "5s"
 

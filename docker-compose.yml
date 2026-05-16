@@ -126,7 +126,7 @@ volumes:
   # to the UID and GID 1000 even if it doesn't exist on your system. Also, they should
   # be readable by everyone.
   #
-  # https://wger.readthedocs.io/en/latest/production/docker.html#missing-static-files
+  # https://wger.readthedocs.io/en/latest/administration/errors.html#missing-static-files
   media:
   static:
 

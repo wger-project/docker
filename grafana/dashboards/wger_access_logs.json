@@ -1,0 +1,744 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Caddy access log analytics from Loki: traffic per site, per URL bucket, top URIs, errors.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "id": 100,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "blue", "value": null}
+            ]
+          },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 1},
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "sum(rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"}[$__interval]))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Requests / sec",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null}
+            ]
+          },
+          "unit": "Bps"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 1},
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "sum(rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} | json | unwrap size [$__interval]))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Outgoing bandwidth",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "purple", "value": null}
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 1},
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "count(count by (request_host) (rate({container=~\".*(caddy|nginx).*\"}[5m])))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Active sites",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 1},
+              {"color": "red", "value": 5}
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 1},
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "100 * (sum(rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\", status=~\"[45]..\"} | request_uri !~ `^/\\.within\\.website/.*` [$__interval])) / sum(rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"}[$__interval])))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Error rate (4xx + 5xx)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5},
+      "id": 101,
+      "panels": [],
+      "title": "Traffic by site",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "normal"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 6},
+      "id": 5,
+      "options": {
+        "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "sum by (request_host) (rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"}[$__interval]))",
+          "legendFormat": "{{request_host}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Requests / sec by site",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "normal"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "Bps"
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 6},
+      "id": 6,
+      "options": {
+        "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "sum by (request_host) (rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} | json | unwrap size [$__interval]))",
+          "legendFormat": "{{request_host}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Bandwidth by site",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 6},
+      "id": 7,
+      "options": {
+        "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "sum by (request_host) (rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\", status=~\"[45]..\"} | request_uri !~ `^/\\.within\\.website/.*` [$__interval]))",
+          "legendFormat": "{{request_host}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Errors / sec by site (4xx + 5xx)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 14},
+      "id": 102,
+      "panels": [],
+      "title": "Traffic by URL bucket",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "description": "Requests per second grouped into URL buckets: api, exercise-images, exercise-videos, ingredients, static, admin, other.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "normal"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 15},
+      "id": 8,
+      "options": {
+        "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "sum by (url_bucket) (rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} | label_format url_bucket=`{{ if hasPrefix \"/api/v2/\" .request_uri }}api{{ else if hasPrefix \"/media/exercise-images/\" .request_uri }}exercise-images{{ else if hasPrefix \"/media/exercise-video/\" .request_uri }}exercise-videos{{ else if hasPrefix \"/media/ingredients/\" .request_uri }}ingredients{{ else if hasPrefix \"/static/\" .request_uri }}static{{ else if hasPrefix \"/admin/\" .request_uri }}admin{{ else }}other{{ end }}` [$__interval]))",
+          "legendFormat": "{{url_bucket}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Requests / sec by URL bucket",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "description": "Outgoing bandwidth by URL bucket. The 'ingredients' and 'exercise-images' lanes answer: how much bandwidth do my media files generate?",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "normal"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "Bps"
+        }
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 15},
+      "id": 9,
+      "options": {
+        "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "sum by (url_bucket) (rate({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} | label_format url_bucket=`{{ if hasPrefix \"/api/v2/\" .request_uri }}api{{ else if hasPrefix \"/media/exercise-images/\" .request_uri }}exercise-images{{ else if hasPrefix \"/media/exercise-video/\" .request_uri }}exercise-videos{{ else if hasPrefix \"/media/ingredients/\" .request_uri }}ingredients{{ else if hasPrefix \"/static/\" .request_uri }}static{{ else if hasPrefix \"/admin/\" .request_uri }}admin{{ else }}other{{ end }}` | json | unwrap size [$__interval]))",
+          "legendFormat": "{{url_bucket}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Bandwidth by URL bucket",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24},
+      "id": 103,
+      "panels": [],
+      "title": "Top URIs",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "description": "Top 10 URIs by request count over the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "inspect": false},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Value"},
+            "properties": [{"id": "displayName", "value": "Requests"}, {"id": "unit", "value": "short"}]
+          }
+        ]
+      },
+      "gridPos": {"h": 10, "w": 12, "x": 0, "y": 25},
+      "id": 10,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "Requests"}]
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "topk(10, sum by (request_uri) (count_over_time({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} [$__range])))",
+          "instant": true,
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Top URIs by request count",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"Time": true},
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "description": "Top 10 URIs by total bytes served. Often very different from request count, which is what makes this useful for cost / bandwidth analysis.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "inspect": false},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Value"},
+            "properties": [{"id": "displayName", "value": "Bytes"}, {"id": "unit", "value": "bytes"}]
+          }
+        ]
+      },
+      "gridPos": {"h": 10, "w": 12, "x": 12, "y": 25},
+      "id": 11,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "Bytes"}]
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "topk(10, sum by (request_uri) (sum_over_time({container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} | json | unwrap size [$__range])))",
+          "instant": true,
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Top URIs by bytes served",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"Time": true},
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 35},
+      "id": 104,
+      "panels": [],
+      "title": "Errors & latency",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "description": "Latency p50 / p95 / p99 per site, in seconds.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {"legend": false, "tooltip": false, "viz": false},
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {"type": "linear"},
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {"group": "A", "mode": "none"},
+            "thresholdsStyle": {"mode": "off"}
+          },
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]},
+          "unit": "s"
+        }
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 36},
+      "id": 12,
+      "options": {
+        "legend": {"calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.50, {container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} | json | unwrap duration [$__interval]) by (request_host)",
+          "legendFormat": "p50 {{request_host}}",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.95, {container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} | json | unwrap duration [$__interval]) by (request_host)",
+          "legendFormat": "p95 {{request_host}}",
+          "queryType": "range",
+          "refId": "B"
+        },
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "quantile_over_time(0.99, {container=~\".*(caddy|nginx).*\", request_host=~\"$host\"} | json | unwrap duration [$__interval]) by (request_host)",
+          "legendFormat": "p99 {{request_host}}",
+          "queryType": "range",
+          "refId": "C"
+        }
+      ],
+      "title": "Latency p50 / p95 / p99 by site",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "description": "Top 10 client IPs by 4xx + 5xx error count. Useful for spotting bots or abusive scanners.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"align": "auto", "cellOptions": {"type": "auto"}, "inspect": false},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Value"},
+            "properties": [{"id": "displayName", "value": "Errors"}, {"id": "unit", "value": "short"}]
+          }
+        ]
+      },
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 36},
+      "id": 13,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {"countRows": false, "fields": "", "reducer": ["sum"], "show": false},
+        "showHeader": true,
+        "sortBy": [{"desc": true, "displayName": "Errors"}]
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "topk(10, sum by (client_ip) (count_over_time({container=~\".*(caddy|nginx).*\", request_host=~\"$host\", status=~\"[45]..\"} | request_uri !~ `^/\\.within\\.website/.*` [$__range])))",
+          "instant": true,
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Top error-producing client IPs",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {"Time": true},
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {"type": "loki", "uid": "${loki}"},
+      "description": "Live tail of recent 5xx responses across all sites.",
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 45},
+      "id": 14,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "${loki}"},
+          "editorMode": "code",
+          "expr": "{container=~\".*(caddy|nginx).*\", request_host=~\"$host\", status=~\"5..\"} | request_uri !~ `^/\\.within\\.website/.*`",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent 5xx responses",
+      "type": "logs"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 40,
+  "tags": ["wger", "caddy", "loki", "access-logs"],
+  "templating": {
+    "list": [
+      {
+        "current": {"selected": false, "text": "Loki", "value": "Loki"},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki datasource",
+        "multi": false,
+        "name": "loki",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {"selected": true, "text": ["All"], "value": ["$__all"]},
+        "datasource": {"type": "loki", "uid": "${loki}"},
+        "definition": "label_values({container=~\".*(caddy|nginx).*\"}, request_host)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Site",
+        "multi": true,
+        "name": "host",
+        "options": [],
+        "query": {"label": "request_host", "refId": "LokiVariableQueryEditor-VariableQuery", "stream": "{container=~\".*(caddy|nginx).*\"}", "type": 1},
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "wger Access Logs",
+  "uid": "wger-access-logs",
+  "version": 1,
+  "weekStart": ""
+}

@@ -1,5 +1,5 @@
-# Check gen-pass.py to generate a different password
-# user: admin
-# password: adminadmin
+# Default credentials are admin / adminadmin — DO NOT use in production.
+# Generate a new bcrypt hash with `python gen-pass.py` and replace the value
+# below before enabling basic auth (see docker-compose.yml).
 basic_auth_users:
     admin: $2b$12$SBshyt4Rw6HD1t4lDfE8geSlbWyTcAPKaGzGk4pM6VszCkNJy7e8G

@@ -1,64 +1,81 @@
 services:
   prometheus:
     image: prom/prometheus:latest
-    restart: 'no'
+    restart: unless-stopped
     volumes:
       - prometheus_data:/prometheus
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./web.yml:/etc/prometheus/web.yml
       - ./wger.rules:/etc/prometheus/wger.rules
+      # Uncomment to enable basic auth on the Prometheus UI.
+      #- ./web.yml:/etc/prometheus/web.yml
     command:
       - --config.file=/etc/prometheus/prometheus.yml
-      - --web.config.file=/etc/prometheus/web.yml
-    ports:
-      - "9090:9090"
+      # Uncomment together with the web.yml volume mount above
+      #- --web.config.file=/etc/prometheus/web.yml
+    expose:
+      - 9090
+    # Uncomment to  access the Prometheus UI directly
+    #ports:
+    #  - "9090:9090"
     extra_hosts:
       - 'host.docker.internal:host-gateway'
 
   grafana:
     image: grafana/grafana:latest
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=adminadmin
       - GF_PROVISIONING_DASHBOARDS_ENABLE=1
       - GF_PROVISIONING_DASHBOARDS_PATH=/etc/grafana/provisioning/dashboards
       - GF_PROVISIONING_DATASOURCES_ENABLE=1
       - GF_PROVISIONING_DATASOURCES_PATH=/etc/grafana/provisioning/datasources
-    restart: 'no'
+    restart: unless-stopped
     volumes:
       - ./provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./dashboards:/var/lib/grafana/dashboards
     ports:
       - "3000:3000"
-#    expose:
-#      - 3000
 
   loki:
     image: grafana/loki:latest
-    ports:
-      - "3100:3100"
+    expose:
+      - 3100
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
     command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
 
   alloy:
     image: grafana/alloy:latest
     volumes:
-      - ./alloy-config.river:/etc/alloy/config.alloy
+      - ./config.alloy:/etc/alloy/config.alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "9080:9080"
-      #- "12345:12345"
+    expose:
+      - 9080
     command:
       - run
       - /etc/alloy/config.alloy
-    restart:
-      unless-stopped
+    restart: unless-stopped
     depends_on:
-        - loki
+      - loki
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    pid: host
+    volumes:
+      - /:/host:ro
+    command:
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    expose:
+      - 9100
 
 volumes:
   prometheus_data:
+  loki_data:
 
 networks:
   default:

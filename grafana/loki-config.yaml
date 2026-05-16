@@ -8,11 +8,11 @@ server:
 
 common:
   instance_addr: 127.0.0.1
-  path_prefix: /tmp/loki
+  path_prefix: /loki
   storage:
     filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
   replication_factor: 1
   ring:
     kvstore:
@@ -28,6 +28,9 @@ query_range:
 limits_config:
   metric_aggregation_enabled: true
   retention_period: 720h # prune logs after 30 days
+  volume_enabled: true   # log volume histogram in Grafana Explore
+  ingestion_rate_mb: 16        # default 4 MB/s, raised for occasional spikes
+  ingestion_burst_size_mb: 32  # default 6 MB
 
 schema_config:
   configs:
@@ -38,6 +41,14 @@ schema_config:
       index:
         prefix: index_
         period: 24h
+
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_store: filesystem
 
 pattern_ingester:
   enabled: true
