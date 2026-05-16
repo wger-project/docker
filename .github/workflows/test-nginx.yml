@@ -27,6 +27,7 @@ jobs:
         run: |
           docker run --rm \
             --add-host=web:127.0.0.1 \
+            --add-host=powersync:127.0.0.1 \
             --volume ${{ github.workspace }}/config/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
             nginx:alpine nginx -t
 
@@ -45,7 +46,7 @@ jobs:
       - name: Start test services
         run: |
           cd tests
-          docker compose -f docker-compose.test.yml up -d web nginx
+          docker compose -f docker-compose.test.yml up -d web powersync nginx
 
           # Wait for services to be healthy
           echo "Waiting for services to be ready..."
