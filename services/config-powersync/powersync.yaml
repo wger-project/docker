@@ -35,7 +35,7 @@ replication:
   # Multiple connection support is on the roadmap
   connections:
     - type: postgresql
-      uri: !env PS_PG_URI
+      uri: !env PS_DATABASE_URI
 
       # Or use individual params
       # hostname: db # From the Docker Compose service name

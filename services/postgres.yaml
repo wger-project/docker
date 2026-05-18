@@ -1,10 +1,9 @@
 services:
   db:
     image: docker.io/postgres:15-alpine
+    env_file:
+      - ../config/prod.env
     environment:
-      - POSTGRES_USER=wger
-      - POSTGRES_PASSWORD=wger
-      - POSTGRES_DB=wger
       - TZ=Europe/Berlin
     logging:
       driver: json-file
@@ -18,7 +17,7 @@ services:
     # "-c", "log_statement=all", "-c", "log_min_error_statement=DEBUG1"
     command: [ "postgres", "-c", "wal_level=logical" ]
     healthcheck:
-      test: pg_isready -U wger
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\""]
       interval: 10s
       timeout: 5s
       retries: 5
