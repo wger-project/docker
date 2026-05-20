@@ -20,6 +20,7 @@ streams:
       - SELECT * FROM exercises_exercise
       - SELECT * FROM exercises_translation
       - SELECT * FROM exercises_alias
+      - SELECT * FROM exercises_exercisecomment
       - SELECT * FROM exercises_muscle
       - SELECT * FROM exercises_exercise_muscles
       - SELECT * FROM exercises_exercise_muscles_secondary
