@@ -1,13 +1,13 @@
 services:
   cache:
     image: docker.io/redis
-    expose:
-      - 6379
     logging:
       driver: json-file
       options:
-        max-size: 5m
-        max-file: 5
+        max-size: 10m
+        max-file: 3
+    expose:
+      - 6379
     volumes:
       - ../config/redis.conf:/usr/local/etc/redis/redis.conf
 #      - redis-data:/data

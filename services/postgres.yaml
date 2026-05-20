@@ -1,15 +1,15 @@
 services:
   db:
     image: docker.io/postgres:15-alpine
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     env_file:
       - ../config/prod.env
     environment:
       - TZ=Europe/Berlin
-    logging:
-      driver: json-file
-      options:
-        max-size: 5m
-        max-file: 5
     volumes:
       - postgres-data:/var/lib/postgresql/data/
     expose:

@@ -6,6 +6,11 @@ services:
     restart: unless-stopped
 
     image: docker.io/journeyapps/powersync-service:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
 
     # The unified service runs an API server and replication worker in the same container.
     # These services can be executed in different containers by using individual entry commands e.g.

@@ -1,6 +1,11 @@
 services:
   prometheus:
     image: prom/prometheus:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     restart: unless-stopped
     volumes:
       - prometheus_data:/prometheus
@@ -22,6 +27,11 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     environment:
       - GF_PROVISIONING_DASHBOARDS_ENABLE=1
       - GF_PROVISIONING_DASHBOARDS_PATH=/etc/grafana/provisioning/dashboards
@@ -37,6 +47,11 @@ services:
 
   loki:
     image: grafana/loki:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     expose:
       - 3100
     volumes:
@@ -47,6 +62,11 @@ services:
 
   alloy:
     image: grafana/alloy:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     volumes:
       - ./config.alloy:/etc/alloy/config.alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -61,6 +81,11 @@ services:
 
   node_exporter:
     image: prom/node-exporter:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     restart: unless-stopped
     pid: host
     volumes:

@@ -8,6 +8,11 @@
 services:
   web:
     image: docker.io/wger/server:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     depends_on:
       db:
         condition: service_healthy
@@ -20,11 +25,6 @@ services:
       - media:/home/wger/media
     expose:
       - 8000
-    logging:
-      driver: json-file
-      options:
-        max-size: 5m
-        max-file: 5
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
       interval: 10s
@@ -42,6 +42,11 @@ services:
 
   nginx:
     image: docker.io/nginx:stable
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     depends_on:
       - web
       - powersync
@@ -79,16 +84,16 @@ services:
 
   celery_worker:
     image: docker.io/wger/server:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     command: /start-worker
     env_file:
       - ./config/prod.env
     volumes:
       - media:/home/wger/media
-    logging:
-      driver: json-file
-      options:
-        max-size: 5m
-        max-file: 5
     depends_on:
       web:
         condition: service_healthy
@@ -102,12 +107,12 @@ services:
 
   celery_beat:
     image: docker.io/wger/server:latest
-    command: /start-beat
     logging:
       driver: json-file
       options:
-        max-size: 5m
-        max-file: 5
+        max-size: 10m
+        max-file: 3
+    command: /start-beat
     volumes:
       - celery-beat:/home/wger/beat/
     env_file:
