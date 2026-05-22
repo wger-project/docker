@@ -73,6 +73,9 @@ streams:
               CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
           )
     queries:
+      # User profile
+      - SELECT * FROM core_userprofile WHERE CAST(user_id AS TEXT) = auth.user_id()
+
       # Weight
       - SELECT uuid AS id, weight, date, user_id FROM weight_weightentry WHERE CAST(user_id AS TEXT) = auth.user_id()
 
