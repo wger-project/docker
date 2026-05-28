@@ -1,15 +1,20 @@
-# See Documentation for more information:
-# https://docs.powersync.com/usage/sync-rules
 # Note that changes to this file are not watched.
 # The service needs to be restarted for changes to take effect.
 # Warning, parameter queries have a limit of 1000 rows (before filtering)!
+#
+# Streams are split by update frequency (cold / medium / hot) so that
+# bucket compaction can collapse the head of hot buckets without being
+# blocked by long-lived rows from cold tables.
+#
+# For details, see the documentation:
+# https://docs.powersync.com/sync/streams/overview
+# https://docs.powersync.com/maintenance-ops/compacting-buckets
 
-# For details, see the documentation: https://docs.powersync.com/sync/streams/overview
 config:
   edition: 3
 
 streams:
-  # Core data, common to all users
+  # Global reference data, shared by all users, changes rarely enough
   core:
     auto_subscribe: true
     queries:
@@ -30,15 +35,15 @@ streams:
       - SELECT * FROM exercises_exerciseimage
       - SELECT * FROM exercises_exercisevideo
 
-  #
-  # IMPORTANT:
-  #
-  # `CAST(user_id AS TEXT)` is required because `auth.user_id()` comes
-  # from the JWT `sub` claim as a string. Without the cast, PowerSync
-  # stores the bucket key as integer but announces it to the client as
-  # string — the client then never finds any ops in the "empty" bucket.
+  # COLD, per-user data that almost never changes after creation.
+  user_profile:
+    auto_subscribe: true
+    queries:
+      - SELECT * FROM core_userprofile WHERE CAST(user_id AS TEXT) = auth.user_id()
+      - SELECT * FROM gallery_image WHERE CAST(user_id AS TEXT) = auth.user_id()
 
-  user_streams:
+  # COLD but potentially large, only the per-user *filter set* changes when the user logs new foods
+  user_ingredients:
     auto_subscribe: true
     with:
       user_ingredients: |
@@ -57,7 +62,7 @@ streams:
               nutrition_nutritionplan ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
             WHERE
               CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
-            )
+          )
         OR
           -- ingredients added to nutritional plans
           nutrition_ingredient.id IN (
@@ -73,16 +78,23 @@ streams:
               CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
           )
     queries:
-      # User profile
-      - SELECT * FROM core_userprofile WHERE CAST(user_id AS TEXT) = auth.user_id()
+      - SELECT * FROM nutrition_ingredient WHERE id IN user_ingredients
+      - |
+        SELECT nutrition_image.*
+        FROM nutrition_image
+        WHERE nutrition_image.ingredient_id IN user_ingredients
+      - |
+        SELECT nutrition_ingredientweightunit.*
+        FROM nutrition_ingredientweightunit
+        WHERE nutrition_ingredientweightunit.ingredient_id IN user_ingredients
 
-      # Weight
-      - SELECT uuid AS id, weight, date, user_id FROM weight_weightentry WHERE CAST(user_id AS TEXT) = auth.user_id()
-
-      # Routines
+  # MEDIUM. Edited e.g. when the user builds or edits their routine or nutrition plan,
+  # but not on every workout.
+  user_planning:
+    auto_subscribe: true
+    queries:
+      # Routines (templates excluded)
       - SELECT * FROM manager_routine WHERE CAST(user_id AS TEXT) = auth.user_id() AND is_template = FALSE
-      - SELECT * FROM manager_workoutlog WHERE CAST(user_id AS TEXT) = auth.user_id()
-      - SELECT * FROM manager_workoutsession WHERE CAST(user_id AS TEXT) = auth.user_id()
 
       # Measurements
       - SELECT * FROM measurements_category WHERE CAST(user_id AS TEXT) = auth.user_id()
@@ -93,7 +105,7 @@ streams:
           ON measurements_measurement.category_id = measurements_category.id
         WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
 
-      # Nutrition (note: we are restricted by <=1000 distinct ingredient_id values here)
+      # Nutrition plan structure (not the log items)
       - SELECT * FROM nutrition_nutritionplan WHERE CAST(user_id AS TEXT) = auth.user_id()
       - |
         SELECT nutrition_meal.*
@@ -109,23 +121,24 @@ streams:
         JOIN nutrition_nutritionplan
           ON nutrition_meal.plan_id = nutrition_nutritionplan.id
         WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
-      - SELECT * FROM nutrition_ingredient WHERE id IN user_ingredients
-      - |
-        SELECT nutrition_image.*
-        FROM
-          nutrition_image
-        WHERE nutrition_image.ingredient_id IN user_ingredients
-      - |
-        SELECT nutrition_ingredientweightunit.*
-        FROM
-          nutrition_ingredientweightunit
-        WHERE nutrition_ingredientweightunit.ingredient_id IN user_ingredients
+
+
+  # HOT. Generates  one or more new rows per workout / meal. Compaction has the
+  # biggest impact here, so it must stay isolated from the other streams above
+  user_activity:
+    auto_subscribe: true
+    queries:
+      # Weight tracking
+      - SELECT uuid AS id, weight, date, user_id FROM weight_weightentry WHERE CAST(user_id AS TEXT) = auth.user_id()
+
+      # Workout sessions and per-set logs
+      - SELECT * FROM manager_workoutsession WHERE CAST(user_id AS TEXT) = auth.user_id()
+      - SELECT * FROM manager_workoutlog WHERE CAST(user_id AS TEXT) = auth.user_id()
+
+      # Nutrition log entries
       - |
         SELECT nutrition_logitem.*
         FROM nutrition_logitem
         JOIN nutrition_nutritionplan
           ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
         WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
-
-      # Gallery
-      - SELECT * FROM gallery_image WHERE CAST(user_id AS TEXT) = auth.user_id()
