@@ -15,9 +15,19 @@ UPDATE authtoken_token
     SET key = '31e2ea0322c07b9df583a9b6d1e794f7139e78d4'
     WHERE user_id = (SELECT id FROM auth_user WHERE username = 'user');
 
--- UPDATE core_userprofile
---   SET email_verified = true
---    WHERE id IN (SELECT id FROM auth_user WHERE username IN ('admin', 'user'));
+-- Mark the email addresses as verified
+INSERT INTO account_emailaddress (email, verified, "primary", user_id)
+SELECT u.email, true, true, u.id
+  FROM auth_user u
+ WHERE u.username IN ('admin', 'user')
+   AND u.email <> ''
+   AND NOT EXISTS (
+       SELECT 1 FROM account_emailaddress e WHERE e.user_id = u.id
+   );
+
+UPDATE account_emailaddress
+   SET verified = true
+ WHERE user_id IN (SELECT id FROM auth_user WHERE username IN ('admin', 'user'));
 
 
 COMMIT;
