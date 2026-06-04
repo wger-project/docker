@@ -23,7 +23,7 @@
 # Settings for telemetry reporting
 # See https://docs.powersync.com/self-hosting/telemetry
 telemetry:
-  disable_telemetry_sharing: false
+  disable_telemetry_sharing: true
 
   # Expose prometheus metrics on this port
   prometheus_port: 9090
