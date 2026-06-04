@@ -2,7 +2,6 @@ name: wger-dev-postgres
 
 services:
   web:
-    profiles: [disabled]
     build:
       pull: true
       context: ${WGER_CODEPATH:?set the absolute path to the wger backend code in the .env file or env variable}
