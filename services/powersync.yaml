@@ -61,9 +61,9 @@ services:
       #     command: ['start', '-r', 'unified', '-sync64', '[base64 encoded content]']
       PS_JWKS_URL: http://web:8000/api/v2/powersync-keys
 
-    ports:
-      - "8080:8080"
-
-    # Expose prometheus metrics
     expose:
+      # API
+      - 8080
+
+      # Prometheus metrics
       - 9090
