@@ -68,4 +68,4 @@ client_auth:
   jwks_uri: !env PS_JWKS_URL
 
   # JWKS audience
-  audience: ["powersync-dev", "powersync"]
+  audience: ["powersync"]
