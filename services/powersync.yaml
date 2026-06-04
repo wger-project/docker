@@ -39,7 +39,6 @@ services:
 
     env_file:
       - ../config/prod.env
-      - ../config/dev.env
 
     environment:
       # This is the path (inside the container) to the YAML config file

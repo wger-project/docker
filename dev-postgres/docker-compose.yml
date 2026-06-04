@@ -48,6 +48,8 @@ services:
 #      - "host.docker.internal:host-gateway"
 #    environment:
 #      PS_JWKS_URL: "http://host.docker.internal:8000/api/v2/powersync-keys"
+    env_file:
+      - ../config/dev.env
     ports:
       - "8080:8080"
 
