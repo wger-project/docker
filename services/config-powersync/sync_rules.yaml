@@ -1,6 +1,14 @@
 # Note that changes to this file are not watched.
 # The service needs to be restarted for changes to take effect.
-# Warning, parameter queries have a limit of 1000 rows (before filtering)!
+
+# Warning: a user may have at most 1000 buckets, i.e. parameter-query results
+# summed across all streams. This counts the *parameter* rows, not the data
+# rows inside a bucket (a single bucket can hold any number of rows). For a
+# stream with a `with:` CTE the count is the number of rows the CTE returns,
+# so for `user_ingredients` below that is the number of distinct ingredients
+# a user has ever referenced. Exceeding the limit is a hard error
+# (PSYNC_S2305 "Too many parameter query results").
+# See https://docs.powersync.com/sync/rules/parameter-queries
 #
 # Streams are split by update frequency (cold / medium / hot) so that
 # bucket compaction can collapse the head of hot buckets without being
@@ -47,45 +55,24 @@ streams:
     auto_subscribe: true
     with:
       user_ingredients: |
-        SELECT DISTINCT
-          nutrition_ingredient.id
-        FROM
-          nutrition_ingredient
-        WHERE
-          -- ingredients directly logged by the user
-          nutrition_ingredient.id IN (
-            SELECT
-              nutrition_logitem.ingredient_id
-            FROM
-              nutrition_logitem
-            JOIN
-              nutrition_nutritionplan ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
-            WHERE
-              CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
-          )
-        OR
-          -- ingredients added to nutritional plans
-          nutrition_ingredient.id IN (
-            SELECT
-              nutrition_mealitem.ingredient_id
-            FROM
-              nutrition_mealitem
-            JOIN
-              nutrition_meal ON nutrition_mealitem.meal_id = nutrition_meal.id
-            JOIN
-              nutrition_nutritionplan ON nutrition_meal.plan_id = nutrition_nutritionplan.id
-            WHERE
-              CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
-          )
+        SELECT DISTINCT nutrition_synced_ingredient.id
+        FROM nutrition_synced_ingredient
+        WHERE nutrition_synced_ingredient.id IN (
+                SELECT nutrition_logitem.ingredient_id FROM nutrition_logitem
+                JOIN nutrition_nutritionplan ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
+                WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id())
+           OR nutrition_synced_ingredient.id IN (
+                SELECT nutrition_mealitem.ingredient_id FROM nutrition_mealitem
+                JOIN nutrition_meal ON nutrition_mealitem.meal_id = nutrition_meal.id
+                JOIN nutrition_nutritionplan ON nutrition_meal.plan_id = nutrition_nutritionplan.id
+                WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id())
     queries:
-      - SELECT * FROM nutrition_ingredient WHERE id IN user_ingredients
+      - SELECT * FROM nutrition_synced_ingredient AS nutrition_ingredient WHERE id IN user_ingredients
       - |
-        SELECT nutrition_image.*
-        FROM nutrition_image
+        SELECT nutrition_image.* FROM nutrition_image
         WHERE nutrition_image.ingredient_id IN user_ingredients
       - |
-        SELECT nutrition_ingredientweightunit.*
-        FROM nutrition_ingredientweightunit
+        SELECT nutrition_ingredientweightunit.* FROM nutrition_ingredientweightunit
         WHERE nutrition_ingredientweightunit.ingredient_id IN user_ingredients
 
   # MEDIUM. Edited e.g. when the user builds or edits their routine or nutrition plan,
