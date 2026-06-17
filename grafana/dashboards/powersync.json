@@ -1,0 +1,175 @@
+{
+  "annotations": { "list": [] },
+  "description": "Core PowerSync service metrics (replication lag, sync throughput, storage). See docs/production/offline.rst for setup. Metric source: telemetry.prometheus_port in PowerSync's powersync.yaml, scraped by prometheus.yml job 'powersync'.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Replication lag",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        { "expr": "powersync_replication_lag_seconds", "refId": "A", "legendFormat": "lag" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 60 }
+            ]
+          }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area" }
+    },
+    {
+      "type": "stat",
+      "title": "Concurrent client connections",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        { "expr": "powersync_concurrent_connections", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "options": { "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "type": "stat",
+      "title": "Total storage used",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "powersync_replication_storage_size_bytes + powersync_operation_storage_size_bytes + powersync_parameter_storage_size_bytes",
+          "refId": "A",
+          "legendFormat": "total"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "options": { "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "type": "stat",
+      "title": "Operations synced (rate, 5m)",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        { "expr": "rate(powersync_operations_synced_total[5m])", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "options": { "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "type": "timeseries",
+      "title": "Sync to clients — throughput",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "rate(powersync_data_synced_bytes_total[1m])",
+          "refId": "A",
+          "legendFormat": "uncompressed bytes/s"
+        },
+        {
+          "expr": "rate(powersync_data_sent_bytes_total[1m])",
+          "refId": "B",
+          "legendFormat": "on-wire bytes/s (compressed)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "Bps", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Replication from source — throughput",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "rate(powersync_data_replicated_bytes_total[1m])",
+          "refId": "A",
+          "legendFormat": "bytes/s"
+        },
+        {
+          "expr": "rate(powersync_rows_replicated_total[1m])",
+          "refId": "B",
+          "legendFormat": "rows/s"
+        },
+        {
+          "expr": "rate(powersync_transactions_replicated_total[1m])",
+          "refId": "C",
+          "legendFormat": "txs/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Storage growth by type",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "$datasource" },
+      "targets": [
+        {
+          "expr": "powersync_replication_storage_size_bytes",
+          "refId": "A",
+          "legendFormat": "replication"
+        },
+        {
+          "expr": "powersync_operation_storage_size_bytes",
+          "refId": "B",
+          "legendFormat": "operations (bucket_data)"
+        },
+        {
+          "expr": "powersync_parameter_storage_size_bytes",
+          "refId": "C",
+          "legendFormat": "parameters"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 30, "stacking": { "mode": "normal" } }
+        }
+      }
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["powersync", "wger"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "PowerSync",
+  "uid": "powersync",
+  "version": 1,
+  "weekStart": ""
+}

@@ -132,3 +132,68 @@ class TestProxyHeaders:
             "Host header not forwarded to backend"
         assert data['headers']['Host'] == 'example.com', \
             f"Expected Host: example.com, got {data['headers']['Host']}"
+
+
+class TestPowerSyncProxy:
+    """Test the /ps/ reverse proxy to the PowerSync service"""
+
+    def test_strips_ps_prefix_from_path(self, nginx_url):
+        """Verify /ps/<path> is forwarded to the upstream as /<path>"""
+        response = requests.get(f"{nginx_url}/ps/sync/stream")
+
+        assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
+        data = response.json()
+
+        assert data['path'] == '/sync/stream', \
+            f"Expected upstream path '/sync/stream', got {data['path']}"
+
+    def test_strips_ps_prefix_for_root(self, nginx_url):
+        """Verify /ps/ (no further path) is forwarded as /"""
+        response = requests.get(f"{nginx_url}/ps/")
+
+        assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
+        data = response.json()
+
+        assert data['path'] == '/', \
+            f"Expected upstream path '/', got {data['path']}"
+
+    def test_proxies_websocket_upgrade_headers(self, nginx_url):
+        """Verify /ps/ proxies WebSocket Upgrade/Connection headers (Web SDK + diagnostics)"""
+        response = requests.get(
+            f"{nginx_url}/ps/sync/stream",
+            headers={
+                'Upgrade': 'websocket',
+                'Connection': 'upgrade',
+            },
+        )
+
+        assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
+        data = response.json()
+
+        assert data['headers'].get('Upgrade') == 'websocket', \
+            f"Expected Upgrade: websocket, got {data['headers'].get('Upgrade')}"
+        assert data['headers'].get('Connection') == 'upgrade', \
+            f"Expected Connection: upgrade, got {data['headers'].get('Connection')}"
+
+    def test_preserves_x_forwarded_proto_from_upstream(self, nginx_url):
+        """Verify /ps/ respects X-Forwarded-Proto from an upstream reverse proxy"""
+        response = requests.get(
+            f"{nginx_url}/ps/sync/stream",
+            headers={'X-Forwarded-Proto': 'https'},
+        )
+
+        assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
+        data = response.json()
+
+        assert data['headers'].get('X-Forwarded-Proto') == 'https', \
+            f"Expected X-Forwarded-Proto: https, got {data['headers'].get('X-Forwarded-Proto')}"
+
+    def test_falls_back_to_scheme_without_upstream_proto(self, nginx_url):
+        """Verify /ps/ falls back to $scheme (http) when no upstream X-Forwarded-Proto is set"""
+        response = requests.get(f"{nginx_url}/ps/sync/stream")
+
+        assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
+        data = response.json()
+
+        assert data['headers'].get('X-Forwarded-Proto') == 'http', \
+            f"Expected fallback to $scheme (http), got {data['headers'].get('X-Forwarded-Proto')}"

@@ -26,6 +26,11 @@ services:
   # Generate the ED25519 private key with "openssl rand -hex 32"
   anubis:
     image: ghcr.io/techarohq/anubis:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     pull_policy: always
     environment:
       BIND: ":3000"
@@ -55,6 +60,11 @@ services:
 
 #  caddy:
 #    image: docker.io/caddy:latest
+#    logging:
+#        driver: json-file
+#        options:
+#          max-size: 10m
+#          max-file: 3
 #    depends_on:
 #      - web
 #    ports:
@@ -75,6 +85,11 @@ services:
 
   celery_flower:
     image: docker.io/wger/server:latest
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
     command: /start-flower
     env_file:
       - ./config/prod.env

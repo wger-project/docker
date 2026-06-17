@@ -19,6 +19,12 @@ scrape_configs:
     static_configs:
     - targets: ['web:8000']
 
+  # PowerSync exposes metrics on its own dedicated port (telemetry.prometheus_port
+  # in config-powersync/powersync.yaml), not on the 8080 sync API port.
+  - job_name: powersync
+    static_configs:
+    - targets: ['powersync:9090']
+
   - job_name: 'node-exporter'
 
     # Override the global default and scrape targets from this job every 5 seconds.

@@ -36,15 +36,6 @@ localhost {
 
     encode
 
-    # or "reverse_proxy anubis:3000 {" if you are using Anubis
-    reverse_proxy web:8000 {
-        header_up Host {host}
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {http.X-Forwarded-For} {remote_host}
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Http-Version {http.request.proto}
-    }
-
     handle /static/* {
         root * /wger
 
@@ -59,6 +50,21 @@ localhost {
         root * /wger
         file_server
    }
+
+    # Reverse proxy for the PowerSync service, used by the mobile app for offline mode.
+    handle_path /ps/* {
+        reverse_proxy powersync:8080
+    }
+
+    # Catch-all: everything not matched above goes to the wger backend.
+    # Replace with `reverse_proxy anubis:3000` if you are using Anubis.
+    reverse_proxy web:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {http.X-Forwarded-For} {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Http-Version {http.request.proto}
+    }
 }
 
 # Refer to the Caddy docs for more information:

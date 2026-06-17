@@ -1,0 +1,32 @@
+services:
+  db:
+    image: docker.io/postgres:15-alpine
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+    env_file:
+      - ../config/prod.env
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    command: [
+      "postgres",
+      "-c", "wal_level=logical",
+      "-c", "shared_buffers=256MB",
+      "-c", "effective_cache_size=768MB",
+      "-c", "work_mem=8MB",
+      "-c", "random_page_cost=1.1",
+      "-c", "max_connections=30"
+    ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
