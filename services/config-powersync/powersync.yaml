@@ -63,9 +63,9 @@ port: !env PS_PORT
 # even though the number of distinct ingredients is well below it.
 # See https://github.com/powersync-ja/powersync-service/issues/682
 #     https://github.com/wger-project/flutter/issues/1237
-#api:
-# parameters:
-#   max_parameter_query_results: 2000
+api:
+  parameters:
+    max_parameter_query_results: 2000
 
 # Specify sync rules
 sync_rules:
