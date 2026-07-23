@@ -13,7 +13,10 @@ application server, a reverse proxy, a database, a caching server, and a Celery
 queue, all configured. Data is persisted in volumes, if you want to use folders,
 read the warning in the env file.
 
-**TLDR:** just do `docker compose up -d`
+**TLDR:** 
+
+1. start the containers: `docker compose up -d` 
+1. setup offline mode storage: `docker compose exec web ./manage.py setup-powersync-storage`
 
 For more details, consult the documentation (and the config files):
 
