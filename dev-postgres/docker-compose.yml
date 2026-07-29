@@ -22,7 +22,7 @@ services:
       - ../config/prod.env
       - ../config/dev.env
     ports:
-      - "8000:8000"
+      - "${WGER_HOST_PORT:-8000}:8000"
 
   # No need to persist the data in dev
 #  cache:
