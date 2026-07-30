@@ -20,7 +20,7 @@ services:
       - ../config/dev.env
       - ../config/dev-sqlite.env
     ports:
-      - "8000:8000"
+      - "${WGER_HOST_PORT:-8000}:8000"
 
     # So this never exists
     command: tail -f /dev/null

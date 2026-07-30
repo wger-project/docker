@@ -22,7 +22,7 @@ services:
       - ../config/prod.env
       - ../config/dev.env
     ports:
-      - "8000:8000"
+      - "${WGER_HOST_PORT:-8000}:8000"
 
   # No need to persist the data in dev
 #  cache:
@@ -38,7 +38,7 @@ services:
       - postgres-dev-data:/var/lib/postgresql/data/
       - ./initdb:/docker-entrypoint-initdb.d:ro
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
 
 # To run the backend "locally" on the host while keeping PowerSync and postgres containerised:
 # Only linux needs to set the extra hosts, macOS/Windows work out of the box
@@ -50,7 +50,7 @@ services:
     env_file:
       - ../config/dev.env
     ports:
-      - "8080:8080"
+      - "${POWERSYNC_HOST_PORT:-8080}:8080"
 
 volumes:
   postgres-dev-data:
