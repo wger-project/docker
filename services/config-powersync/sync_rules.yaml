@@ -1,5 +1,13 @@
 # Note that changes to this file are not watched.
 # The service needs to be restarted for changes to take effect.
+#
+# A column added server-side does not reach rows already in bucket storage:
+# the queries below (SELECT * included) only run when a row is replicated, and
+# an AddField emits no WAL. After such a migration either run a backfill that
+# touches the rows, or bump the version line below so the changed file forces
+# a reprocess
+#
+# Sync rules version: 1
 
 # Warning: a user may have at most 1000 buckets, i.e. parameter-query results
 # summed across all streams. This counts the *parameter* rows, not the data
