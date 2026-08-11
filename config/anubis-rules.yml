@@ -15,6 +15,10 @@ bots:
     expression: 'path.startsWith("/allauth")'
     action: ALLOW
 
+  - name: allow-oauth-api
+    expression: 'path.startsWith("/identity/")'
+    action: ALLOW
+
   # Pathological bots to deny
   # This correlates to data/bots/_deny-pathological.yaml in the source tree
   # https://github.com/TecharoHQ/anubis/blob/main/data/bots/_deny-pathological.yaml
