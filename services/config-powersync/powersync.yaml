@@ -65,7 +65,7 @@ port: !env PS_PORT
 #     https://github.com/wger-project/flutter/issues/1237
 api:
   parameters:
-    max_parameter_query_results: 2000
+    max_parameter_query_results: 10000
 
 # Specify sync rules
 sync_rules:
