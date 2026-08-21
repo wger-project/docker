@@ -9,6 +9,11 @@
 #
 # Sync rules version: 1
 
+# Every table referenced here must be part of the "powersync" publication, which
+# lists its tables explicitly (see the server's core migration 0027). Reading from
+# a table that was not synced before also needs
+# `ALTER PUBLICATION powersync ADD TABLE <table>;`
+
 # Warning: a user may have at most 1000 buckets, i.e. parameter-query results
 # summed across all streams. This counts the *parameter* rows, not the data
 # rows inside a bucket (a single bucket can hold any number of rows). For a
