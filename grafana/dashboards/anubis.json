@@ -802,7 +802,7 @@
         "type": "loki",
         "uid": "${loki}"
       },
-      "description": "Top 20 paths in the others bucket \u2014 i.e. paths not matching ingredient/exercise or their API. Useful for spotting unusual probe targets (wp-admin scans, env file leaks, etc.).",
+      "description": "Top 20 paths in the others bucket, i.e. paths not matching ingredient/exercise or their API. Useful for spotting unusual probe targets (wp-admin scans, env file leaks, etc.). Anubis own endpoints are left out: every honeypot hit has two uuids in its path, which alone would blow past the series limit.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -878,7 +878,7 @@
             "uid": "${loki}"
           },
           "editorMode": "code",
-          "expr": "topk(20, sum by (request_path) (count_over_time({container=~\".*anubis.*\", request_host=~\"$host\"} | request_path != `` | request_path !~ `^/api/v2/(ingredient|exercise).*` | request_path !~ `^/[a-z]{2}(-[a-z]+)?/(nutrition/ingredient|exercise)/.*` [$__range])))",
+          "expr": "topk(20, sum by (request_path) (count_over_time({container=~\".*anubis.*\", request_host=~\"$host\"} | request_path != `` | request_path !~ `^/\\.within\\.website/.*` | request_path !~ `^/api/v2/(ingredient|exercise).*` | request_path !~ `^/[a-z]{2}(-[a-z]+)?/(nutrition/ingredient|exercise)/.*` [$__range])))",
           "instant": true,
           "queryType": "instant",
           "refId": "A"
