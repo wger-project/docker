@@ -19,6 +19,13 @@ scrape_configs:
     static_configs:
     - targets: ['web:8000']
 
+  # Anubis serves its metrics on a dedicated port (METRICS_BIND), not on the
+  # proxy port. Requests that end up in the honeypot only show up here, they
+  # never reach django.
+  - job_name: anubis
+    static_configs:
+    - targets: ['anubis:9090']
+
   # PowerSync exposes metrics on its own dedicated port (telemetry.prometheus_port
   # in config-powersync/powersync.yaml), not on the 8080 sync API port.
   - job_name: powersync

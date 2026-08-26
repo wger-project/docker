@@ -44,6 +44,7 @@ services:
       ED25519_PRIVATE_KEY_HEX: "dba7c07331693b7beaeae102765568dd3c35cc1b6b3b23adaeeb5ecee406cc71"
     expose:
       - 3000
+      - 9090
     healthcheck:
       test: [ "CMD", "anubis", "--healthcheck" ]
       interval: 5s
