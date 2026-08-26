@@ -62,7 +62,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
+        "w": 6,
         "x": 0,
         "y": 1
       },
@@ -123,8 +123,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 8,
+        "w": 6,
+        "x": 6,
         "y": 1
       },
       "id": 2,
@@ -184,8 +184,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 16,
+        "w": 6,
+        "x": 12,
         "y": 1
       },
       "id": 3,
@@ -217,6 +217,68 @@
         }
       ],
       "title": "Denies / sec",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "description": "Requests from bots that already fell for the honeypot. These never produce a decision and are missing from every other panel here. Comes from Anubis itself, so it is not filtered by the Site variable.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(anubis_honeypot_pagegen_timings_count[$__rate_interval]))",
+          "legendFormat": "honeypot",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Honeypot hits / sec",
       "type": "stat"
     },
     {
@@ -740,7 +802,7 @@
         "type": "loki",
         "uid": "${loki}"
       },
-      "description": "Top 20 paths in the others bucket — i.e. paths not matching ingredient/exercise or their API. Useful for spotting unusual probe targets (wp-admin scans, env file leaks, etc.).",
+      "description": "Top 20 paths in the others bucket \u2014 i.e. paths not matching ingredient/exercise or their API. Useful for spotting unusual probe targets (wp-admin scans, env file leaks, etc.).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -887,6 +949,195 @@
       ],
       "title": "Recent explicit denies",
       "type": "logs"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 47
+      },
+      "id": 104,
+      "panels": [],
+      "title": "Anubis metrics",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "description": "What Anubis does with the traffic it sees. The honeypot line is usually orders of magnitude above the rest, that is bots that were already caught coming back. Comes from Anubis itself, so it is not filtered by the Site variable.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "editorMode": "code",
+          "range": true,
+          "refId": "A",
+          "expr": "sum(rate(anubis_honeypot_pagegen_timings_count[$__rate_interval]))",
+          "legendFormat": "honeypot"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "editorMode": "code",
+          "range": true,
+          "refId": "B",
+          "expr": "sum(rate(anubis_challenges_issued[$__rate_interval]))",
+          "legendFormat": "challenges issued"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "editorMode": "code",
+          "range": true,
+          "refId": "C",
+          "expr": "sum(rate(anubis_challenges_validated[$__rate_interval]))",
+          "legendFormat": "challenges validated"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "editorMode": "code",
+          "range": true,
+          "refId": "D",
+          "expr": "sum(rate(anubis_failed_validations[$__rate_interval]))",
+          "legendFormat": "failed validations"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "editorMode": "code",
+          "range": true,
+          "refId": "E",
+          "expr": "sum(rate(anubis_proxied_requests_total[$__rate_interval]))",
+          "legendFormat": "proxied upstream"
+        }
+      ],
+      "title": "Anubis throughput / sec",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus}"
+      },
+      "description": "Which networks the traffic comes from. Useful to tell a single scraper farm from broad crawling. Comes from Anubis itself, so it is not filtered by the Site variable.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "11.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus}"
+          },
+          "editorMode": "code",
+          "expr": "topk(10, sum by (asn) (rate(anubis_requests_by_asn_total[$__rate_interval])))",
+          "legendFormat": "AS{{asn}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Top networks by ASN",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
@@ -912,6 +1163,20 @@
         "name": "loki",
         "options": [],
         "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus datasource",
+        "multi": false,
+        "name": "prometheus",
+        "options": [],
+        "query": "prometheus",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
