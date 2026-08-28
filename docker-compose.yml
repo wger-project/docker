@@ -28,7 +28,9 @@ services:
     # Give gunicorn time to finish in-flight requests on shutdown
     stop_grace_period: 60s
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
+      # Use a GET request (not --spider, which sends HEAD and makes gunicorn log
+      # a warning on every check) against the lightweight version endpoint
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O", "/dev/null", "http://localhost:8000/api/v2/version/"]
       interval: 10s
       timeout: 5s
       start_period: 300s
