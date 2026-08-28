@@ -2,7 +2,7 @@
 
 Thank you all for contributing to the project, you are true heroes! 🫶
 
-*Generated on 2026-04-10*
+*Generated on 2026-08-28*
 
 ---
 
@@ -21,6 +21,7 @@ Thank you all for contributing to the project, you are true heroes! 🫶
 - AlexAsh - [https://github.com/AlexAshs](https://github.com/AlexAshs)
 - kuseler - [https://github.com/kuseler](https://github.com/kuseler)
 - Allan Nordhøy - [https://github.com/comradekingu](https://github.com/comradekingu)
+- armandoschianodicola - [https://github.com/armandoschianodicola](https://github.com/armandoschianodicola)
 
 ## Translators
 
