@@ -25,6 +25,8 @@ services:
       - media:/home/wger/media
     expose:
       - 8000
+    # Give gunicorn time to finish in-flight requests on shutdown
+    stop_grace_period: 60s
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
       interval: 10s
