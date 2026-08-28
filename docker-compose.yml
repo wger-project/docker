@@ -139,6 +139,9 @@ networks:
   default:
     name: wger_network
 
+# If you get an "additional properties 'extends' not allowed"-error, your compose version
+# is too old (this needs at least 5.x). If you remove the "db" and "redis" services from
+# this file, you should be able to start the stack.
 include:
   - path: ./services/postgres.yaml
   - path: ./services/powersync.yaml
