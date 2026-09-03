@@ -1,5 +1,18 @@
 # Note that changes to this file are not watched.
 # The service needs to be restarted for changes to take effect.
+#
+# A column added server-side does not reach rows already in bucket storage:
+# the queries below (SELECT * included) only run when a row is replicated, and
+# an AddField emits no WAL. After such a migration either run a backfill that
+# touches the rows, or bump the version line below so the changed file forces
+# a reprocess
+#
+# Sync rules version: 1
+
+# Every table referenced here must be part of the "powersync" publication, which
+# lists its tables explicitly (see the server's core migration 0027). Reading from
+# a table that was not synced before also needs
+# `ALTER PUBLICATION powersync ADD TABLE <table>;`
 
 # Warning: a user may have at most 1000 buckets, i.e. parameter-query results
 # summed across all streams. This counts the *parameter* rows, not the data
@@ -83,14 +96,8 @@ streams:
       # Routines (templates excluded)
       - SELECT * FROM manager_routine WHERE CAST(user_id AS TEXT) = auth.user_id() AND is_template = FALSE
 
-      # Measurements
+      # Measurement categories (the measurements themselves are HOT, see below)
       - SELECT * FROM measurements_category WHERE CAST(user_id AS TEXT) = auth.user_id()
-      - |
-        SELECT measurements_measurement.*
-        FROM measurements_measurement
-        INNER JOIN measurements_category
-          ON measurements_measurement.category_id = measurements_category.id
-        WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
 
       # Nutrition plan structure (not the log items)
       - SELECT * FROM nutrition_nutritionplan WHERE CAST(user_id AS TEXT) = auth.user_id()
@@ -115,8 +122,13 @@ streams:
   user_activity:
     auto_subscribe: true
     queries:
-      # Weight tracking
-      - SELECT uuid AS id, weight, date, user_id FROM weight_weightentry WHERE CAST(user_id AS TEXT) = auth.user_id()
+      # Measurements, including body weight entries, so typically one or more new rows per day
+      - |
+        SELECT measurements_measurement.*
+        FROM measurements_measurement
+        INNER JOIN measurements_category
+          ON measurements_measurement.category_id = measurements_category.id
+        WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
 
       # Workout sessions and per-set logs
       - SELECT * FROM manager_workoutsession WHERE CAST(user_id AS TEXT) = auth.user_id()
