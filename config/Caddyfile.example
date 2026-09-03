@@ -88,6 +88,11 @@ localhost {
     # Catch-all: everything not matched above goes to the wger backend.
     # Replace with `reverse_proxy anubis:3000` if you are using Anubis.
     reverse_proxy web:8000 {
+        # Retry failed connection attempts for a few seconds. This bridges the
+        # short window during a rolling deployment where the old web container
+        # is already gone but its IP might still be dialed.
+        lb_try_duration 5s
+
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {http.X-Forwarded-For} {remote_host}
