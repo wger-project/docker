@@ -16,16 +16,41 @@
     admin :2019
 
     # `include http.log.access` matches the access logger of every site
+    #
+    # Remove some of the headers, this baloons the size of the logs on a high-traffic server
     log access-json {
         include http.log.access
-        output file /var/log/www/access.log
+        output file /var/log/www/access.log {
+            roll_size 50MiB
+            roll_keep 4
+            roll_keep_for 168h
+        }
+        format filter {
+            wrap json
+            fields {
+                request>tls delete
+                resp_headers delete
+            }
+        }
     }
 
-    # Uncomment to also pipe access logs to stdout (JSON), e.g. so Alloy/Loki
-    # can pick them up. Default `format json` is required for the parser.
+    # Uncomment to also pipe access logs to stdout, e.g. so Alloy/Loki can pick
+    # them up. This one is trimmed down to the fields the Grafana dashboards query
     #log access-stdout {
     #    include http.log.access
-    #    format json
+    #    format filter {
+    #        wrap json
+    #        fields {
+    #            request>headers delete
+    #            request>tls delete
+    #            request>remote_ip delete
+    #            request>remote_port delete
+    #            resp_headers delete
+    #            bytes_read delete
+    #            user_id delete
+    #            msg delete
+    #        }
+    #    }
     #}
 }
 
@@ -52,6 +77,10 @@ localhost {
    }
 
     # Reverse proxy for the PowerSync service, used by the mobile app for offline mode.
+    #
+    # The sync stream must not be buffered. Caddy flushes responses without a
+    # Content-Length immediately and passes the upstream's X-Accel-Buffering
+    # header on, so a proxy in front of Caddy gets that hint as well.
     handle_path /ps/* {
         reverse_proxy powersync:8080
     }
