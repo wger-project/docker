@@ -39,6 +39,10 @@ services:
       - ./initdb:/docker-entrypoint-initdb.d:ro
     ports:
       - "${POSTGRES_HOST_PORT:-5432}:5432"
+    healthcheck:
+      # Loading the dumps from initdb can take a long time on the first start,
+      # don't mark the container as unhealthy in the meantime
+      start_period: 20m
 
 # To run the backend "locally" on the host while keeping PowerSync and postgres containerised:
 # Only linux needs to set the extra hosts, macOS/Windows work out of the box
