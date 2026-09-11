@@ -15,6 +15,7 @@ read the warning in the env file.
 
 **TLDR:** 
 
+1. clone this whole repository: `git clone https://github.com/wger-project/docker.git`
 1. start the containers: `docker compose up -d` 
 1. setup offline mode storage: `docker compose exec web ./manage.py setup-powersync-storage`
 
@@ -23,8 +24,9 @@ For more details, consult the documentation (and the config files):
 * production: <https://wger.readthedocs.io/en/latest/installation/docker.html>
 * development: <https://wger.readthedocs.io/en/latest/development/docker.html>
 
-It is recommended to regularly pull the latest version of the compose file,
-since sometimes new configurations or environmental variables are added.
+It is recommended to regularly pull the latest version of this repository
+(`git pull`), since sometimes new configurations, environmental variables or
+service files are added.
 
 ## Contact
 
