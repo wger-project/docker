@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily backup of the wger database
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=15min
+# Run on the next boot if the server was off at the scheduled time
+Persistent=true
+
+[Install]
+WantedBy=timers.target

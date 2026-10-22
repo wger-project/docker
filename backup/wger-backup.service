@@ -1,0 +1,13 @@
+[Unit]
+Description=Backup of the wger database
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+# Adjust to the location of this repository
+ExecStart=/root/docker/backup/backup-db.sh
+# Optional, see the top of backup-db.sh for all settings
+#Environment=BACKUP_DIR=/root/dumps
+Nice=10
+IOSchedulingClass=idle
