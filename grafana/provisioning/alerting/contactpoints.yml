@@ -1,0 +1,12 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: email-default
+    receivers:
+      - uid: email-default
+        type: email
+        settings:
+          addresses: hello@wger.de
+          singleEmail: false
+        disableResolveMessage: false

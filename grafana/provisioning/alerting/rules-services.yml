@@ -1,0 +1,34 @@
+apiVersion: 1
+
+# The datasource UID is the one Grafana derives from the provisioned
+# name "Prometheus".
+groups:
+  - orgId: 1
+    name: services
+    folder: wger
+    interval: 1m
+    rules:
+      - uid: scrape-target-down
+        title: Service not reachable
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 300, to: 0}
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              instant: true
+              range: false
+              expr: up
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: lt, params: [1]}
+        noDataState: Alerting
+        execErrState: Error
+        for: 5m
+        labels: {severity: critical}
+        annotations:
+          summary: 'Prometheus cannot scrape {{ $labels.job }} ({{ $labels.instance }})'

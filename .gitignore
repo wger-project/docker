@@ -2,3 +2,4 @@
 /docker-compose.override.yml
 /dev-postgres/.env
 /dev/.env
+/grafana/.env

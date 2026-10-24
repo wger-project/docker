@@ -37,10 +37,17 @@ services:
       - GF_PROVISIONING_DASHBOARDS_PATH=/etc/grafana/provisioning/dashboards
       - GF_PROVISIONING_DATASOURCES_ENABLE=1
       - GF_PROVISIONING_DATASOURCES_PATH=/etc/grafana/provisioning/datasources
+      # Outgoing mail for alert notifications, configured in .env
+      - GF_SMTP_ENABLED=${GRAFANA_SMTP_ENABLED:-false}
+      - GF_SMTP_HOST=${GRAFANA_SMTP_HOST:-}
+      - GF_SMTP_USER=${GRAFANA_SMTP_USER:-}
+      - GF_SMTP_PASSWORD=${GRAFANA_SMTP_PASSWORD:-}
+      - GF_SMTP_FROM_ADDRESS=${GRAFANA_SMTP_FROM_ADDRESS:-admin@grafana.localhost}
     restart: unless-stopped
     volumes:
       - ./provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./provisioning/alerting:/etc/grafana/provisioning/alerting
       - ./dashboards:/var/lib/grafana/dashboards
     ports:
       - "3000:3000"

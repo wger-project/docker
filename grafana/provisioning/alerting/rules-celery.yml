@@ -1,0 +1,94 @@
+apiVersion: 1
+
+# Alerts on the logs of the celery containers in Loki. The datasource UID is
+# the one Grafana derives from the provisioned name "Loki".
+groups:
+  - orgId: 1
+    name: celery
+    folder: wger
+    interval: 5m
+    rules:
+      - uid: celery-task-failed
+        title: Celery task failed
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 3600, to: 0}
+            datasourceUid: P8E80F9AEF21F6940
+            model:
+              queryType: instant
+              expr: >-
+                sum by (task) (count_over_time(
+                {container=~".*celery_worker.*"} |= "raised unexpected"
+                | regexp `Task (?P<task>[\w.]+)\[[^\]]+\] raised unexpected` [1h]))
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [0]}
+        noDataState: OK
+        execErrState: Error
+        for: 0m
+        labels: {severity: warning}
+        annotations:
+          summary: 'Celery task {{ $labels.task }} failed'
+          description: >-
+            The task raised an exception in the last hour, see the logs of the
+            celery_worker container for the traceback.
+
+      # absent_over_time() returns no data as long as matching lines exist,
+      # so "no data" is the healthy state here.
+      # Several periodic tasks run daily, so beat sends something each day.
+      - uid: celery-beat-silent
+        title: Celery beat sent no tasks
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 93600, to: 0}
+            datasourceUid: P8E80F9AEF21F6940
+            model:
+              queryType: instant
+              expr: >-
+                absent_over_time({container=~".*celery_beat.*"}
+                |= "Sending due task" [26h])
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [0]}
+        noDataState: OK
+        execErrState: Error
+        for: 0m
+        labels: {severity: critical}
+        annotations:
+          summary: Celery beat has not scheduled any task for 26 hours
+
+      - uid: celery-worker-silent
+        title: Celery worker finished no tasks
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange: {from: 93600, to: 0}
+            datasourceUid: P8E80F9AEF21F6940
+            model:
+              queryType: instant
+              expr: >-
+                absent_over_time({container=~".*celery_worker.*"}
+                |= "succeeded in" [26h])
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator: {type: gt, params: [0]}
+        noDataState: OK
+        execErrState: Error
+        for: 0m
+        labels: {severity: critical}
+        annotations:
+          summary: The celery worker has not finished any task for 26 hours
