@@ -31,6 +31,10 @@ limits_config:
   volume_enabled: true   # log volume histogram in Grafana Explore
   ingestion_rate_mb: 16        # default 4 MB/s, raised for occasional spikes
   ingestion_burst_size_mb: 32  # default 6 MB
+  # The "wger Clients" dashboard counts distinct client IPs via
+  # count(sum by (client_ip) (...)); the intermediate per-IP series count is
+  # subject to this limit (default 500), which any real deployment exceeds.
+  max_query_series: 100000
 
 schema_config:
   configs:

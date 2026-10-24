@@ -72,6 +72,10 @@ loki.process "process_logs" {
            request_proto  = "request.proto",
            request_host   = "request.host",
            client_ip      = "request.client_ip",
+           // Top-level field added via `log_append user_agent {header.User-Agent}`
+           // in the Caddyfile (the request headers themselves are dropped from
+           // the log). Used by the "wger Clients" dashboard.
+           user_agent     = "",
          }
       }
 
@@ -94,6 +98,7 @@ loki.process "process_logs" {
       values = {
         request_uri = "",
         client_ip = "",
+        user_agent = "",
       }
     }
   }
@@ -116,6 +121,7 @@ loki.process "process_logs" {
            request_proto  = "",
            request_host   = "",
            client_ip      = "",
+           user_agent     = "",
          }
       }
 
@@ -131,6 +137,7 @@ loki.process "process_logs" {
       values = {
         request_uri = "",
         client_ip = "",
+        user_agent = "",
       }
     }
   }
