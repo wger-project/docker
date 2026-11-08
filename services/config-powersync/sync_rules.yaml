@@ -7,7 +7,7 @@
 # touches the rows, or bump the version line below so the changed file forces
 # a reprocess
 #
-# Sync rules version: 1
+# Sync rules version: 2
 
 # Every table referenced here must be part of the "powersync" publication, which
 # lists its tables explicitly (see the server's core migration 0027). Reading from
@@ -122,13 +122,17 @@ streams:
   user_activity:
     auto_subscribe: true
     queries:
-      # Measurements, including body weight entries, so typically one or more new rows per day
+      # Measurements, including body weight entries, so typically one or more new rows per day.
+      # Rows with source 'device' (any wearable or sensor writer; heart-rate samples alone can
+      # reach ~100k rows a year) are not synced by default; apps that want them subscribe to
+      # device_measurements.
       - |
         SELECT measurements_measurement.*
         FROM measurements_measurement
         INNER JOIN measurements_category
           ON measurements_measurement.category_id = measurements_category.id
         WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
+          AND measurements_measurement.source <> 'device'
 
       # Workout sessions and per-set logs
       - SELECT * FROM manager_workoutsession WHERE CAST(user_id AS TEXT) = auth.user_id()
@@ -141,3 +145,15 @@ streams:
         JOIN nutrition_nutritionplan
           ON nutrition_logitem.plan_id = nutrition_nutritionplan.id
         WHERE CAST(nutrition_nutritionplan.user_id AS TEXT) = auth.user_id()
+
+  # Opt-in: device-source measurements (see the comment in user_activity above).
+  device_measurements:
+    auto_subscribe: false
+    queries:
+      - |
+        SELECT measurements_measurement.*
+        FROM measurements_measurement
+        INNER JOIN measurements_category
+          ON measurements_measurement.category_id = measurements_category.id
+        WHERE CAST(measurements_category.user_id AS TEXT) = auth.user_id()
+          AND measurements_measurement.source = 'device'
